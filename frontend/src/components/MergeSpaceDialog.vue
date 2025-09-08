@@ -16,15 +16,11 @@
         <span class="whitespace-nowrap font-semibold">{{ space?.title }}</span> space to the
         selected space. This change is irreversible!
       </p>
-      <Autocomplete
+      <Combobox
         :options="groupedSpaceOptions"
         v-model="selectedSpace"
         placeholder="Select a space"
-      >
-        <template #item-prefix="{ option }">
-          <span class="mr-2">{{ option.icon }}</span>
-        </template>
-      </Autocomplete>
+      />
       <ErrorMessage class="mt-2" :message="spaces.runDocMethod.error" />
     </template>
     <template #actions>
@@ -34,7 +30,7 @@
         :loading="spaces.runDocMethod.isLoading(spaceId, 'merge_with_project')"
         @click="submit"
       >
-        {{ selectedSpace ? `Merge with ${selectedSpace?.label}` : 'Merge' }}
+        {{ selectedSpace ? `Merge with ${useSpace(selectedSpace).value?.title}` : 'Merge' }}
       </Button>
     </template>
   </Dialog>
@@ -42,7 +38,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Autocomplete } from 'frappe-ui'
+import { Combobox } from 'frappe-ui'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
 import { useDoctype } from 'frappe-ui/src/data-fetching'
 import { GPProject } from '@/types/doctypes'
@@ -69,10 +65,10 @@ function submit() {
       method: 'merge_with_project',
       name: props.spaceId,
       params: {
-        project: selectedSpace.value?.value,
+        project: selectedSpace.value,
       },
       validate() {
-        if (!selectedSpace.value?.value) {
+        if (!selectedSpace.value) {
           return 'Please select a project to merge'
         }
       },
@@ -82,7 +78,7 @@ function submit() {
         show.value = false
         return router.replace({
           name: 'Space',
-          params: { spaceId: selectedSpace.value.value },
+          params: { spaceId: selectedSpace.value },
         })
       }
     })

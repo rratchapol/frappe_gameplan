@@ -19,6 +19,12 @@ export function useTask(taskId: MaybeRefOrGetter<string>) {
       methods: {
         trackVisit: 'track_visit',
       },
+      transform(doc) {
+        return {
+          ...doc,
+          project: doc.project ? String(doc.project) : undefined,
+        }
+      },
     })
   }
   return tasksCache[name] as ReturnType<typeof useDoc<Task, TaskMethods>>

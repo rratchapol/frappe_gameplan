@@ -63,7 +63,7 @@
           "
         />
         <div class="mt-8 flex flex-wrap items-center gap-2 sm:hidden">
-          <Autocomplete
+          <Combobox
             placeholder="Assign a user"
             :options="assignableUsers"
             v-model="task.doc.assigned_to"
@@ -73,7 +73,7 @@
             v-model="task.doc.due_date"
             variant="subtle"
             placeholder="Due date"
-            :disabled="false"
+            format="D MMM, YYYY"
             @update:modelValue="
               task.setValue.submit({
                 due_date: $event,
@@ -96,7 +96,7 @@
               {{ task.doc.priority || 'Set priority' }}
             </Button>
           </Dropdown>
-          <Autocomplete
+          <Combobox
             placeholder="Select space"
             :options="spaceOptions"
             :modelValue="task.doc.project"
@@ -110,11 +110,12 @@
       <div class="grid grid-cols-2 items-center gap-y-6 p-6 text-base text-ink-gray-6">
         <div>Assignee</div>
         <div>
-          <Autocomplete
+          <Combobox
             placeholder="Assign a user"
             :options="assignableUsers"
             v-model="task.doc.assigned_to"
             @update:modelValue="changeAssignee"
+            placement="end"
           />
         </div>
         <div>Due Date</div>
@@ -123,7 +124,7 @@
             v-model="task.doc.due_date"
             variant="subtle"
             placeholder="Due date"
-            :disabled="false"
+            format="D MMM, YYYY"
             @update:modelValue="
               task.setValue.submit({
                 due_date: $event,
@@ -133,7 +134,7 @@
         </div>
         <div>Space</div>
         <div>
-          <Autocomplete
+          <Combobox
             placeholder="Select space"
             :options="spaceOptions"
             :modelValue="task.doc.project"
@@ -175,7 +176,7 @@ import CommentsList from '@/components/CommentsList.vue'
 import TaskStatusIcon from '@/components/NewTaskDialog/TaskStatusIcon.vue'
 import TaskPriorityIcon from '@/components/icons/TaskPriorityIcon.vue'
 import DropdownMoreOptions from './DropdownMoreOptions.vue'
-import { Autocomplete, Dropdown, LoadingText, DatePicker, Button, debounce } from 'frappe-ui'
+import { Dropdown, LoadingText, DatePicker, Button, Combobox } from 'frappe-ui'
 import { vFocus } from '@/directives'
 import { activeUsers } from '@/data/users'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
@@ -197,12 +198,19 @@ task.onSuccess((doc) => {
   }
 })
 
-const assignableUsers = computed(() =>
-  activeUsers.value.map((user) => ({
-    label: user.full_name,
-    value: user.name,
-  })),
-)
+const assignableUsers = computed<{ label: string; value: string }[]>(() => {
+  return [
+    {
+      label: 'No Assignee',
+      value: '<no_assignee>',
+    },
+  ].concat(
+    ...activeUsers.value.map((user) => ({
+      label: user.full_name,
+      value: user.name,
+    })),
+  )
+})
 
 const statusOptions = computed(() =>
   (['Backlog', 'Todo', 'In Progress', 'Done', 'Canceled'] as Array<GPTask['status']>).map(
@@ -224,14 +232,17 @@ const priorityOptions = computed(() =>
 
 const spaceOptions = useGroupedSpaceOptions({ filterFn: (space) => !space.archived_at })
 
-function changeAssignee(option: { value: string } | null) {
-  task.setValue.submit({ assigned_to: option?.value || '' })
+function changeAssignee(option: string) {
+  if (option === '<no_assignee>') {
+    option = ''
+  }
+  task.setValue.submit({ assigned_to: option })
 }
 
-function changeSpace(option: { value: string } | null) {
+function changeSpace(option: string) {
   if (!task.doc) return
-  task.doc.project = option?.value || undefined
-  task.setValue.submit({ project: option?.value || '' }).then(updateRoute)
+  task.doc.project = option
+  task.setValue.submit({ project: option }).then(updateRoute)
 }
 
 function updateRoute() {

@@ -21,33 +21,21 @@
           @keydown.enter="onCreateClick"
         />
         <div class="grid grid-cols-2 gap-2">
-          <Autocomplete
+          <Combobox
             placeholder="Assign a user"
             :options="assignableUsers"
             v-model="newTask.doc.assigned_to"
-          >
-            <template #prefix>
-              <UserAvatar
-                class="mr-2"
-                size="xs"
-                :user="newTask.doc.assigned_to?.value ?? newTask.doc.assigned_to"
-              />
-            </template>
-            <template #item-prefix="{ option }">
-              <UserAvatar size="xs" :user="option.value" />
-            </template>
-          </Autocomplete>
-          <TextInput type="date" placeholder="Set due date" v-model="newTask.doc.due_date" />
-          <Autocomplete placeholder="Project" :options="spaceOptions" v-model="newTask.doc.project">
-            <template #prefix>
-              <div class="mr-2 leading-4 font-[emoji]" v-if="newTask.doc.project">
-                {{ useSpace(newTask.doc.project?.value ?? newTask.doc.project).value.icon }}
-              </div>
-            </template>
-            <template #item-prefix="{ option }">
-              <div class="leading-4 font-[emoji]">{{ option.icon }}</div>
-            </template>
-          </Autocomplete>
+          />
+          <DatePicker
+            v-model="newTask.doc.due_date"
+            placeholder="Set due date"
+            format="D MMM, YYYY"
+          />
+          <Combobox
+            placeholder="Select space"
+            :options="spaceOptions"
+            v-model="newTask.doc.project"
+          />
           <Dropdown class="w-full" :options="statusOptions()">
             <Button>
               <template #prefix v-if="newTask.doc.status">
@@ -72,13 +60,12 @@
 </template>
 <script setup lang="ts">
 import { computed, h, useTemplateRef, watch } from 'vue'
-import { Dialog, FormControl, Autocomplete, Dropdown, TextInput } from 'frappe-ui'
+import { Dialog, FormControl, Dropdown, Combobox, DatePicker } from 'frappe-ui'
 import TaskStatusIcon from './TaskStatusIcon.vue'
 import { activeUsers } from '@/data/users'
 import { GPTask } from '@/types/doctypes'
 import { showDialog, newTask, _onSuccess } from './state'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
-import { useSpace } from '@/data/spaces'
 import KeyboardShortcut from '../KeyboardShortcut.vue'
 
 const titleInput = useTemplateRef('titleInput')
@@ -116,11 +103,6 @@ function onCreateClick(e: KeyboardEvent) {
   if (!newTask.value.doc.title) {
     newTask.value.error = new Error('Task title is required')
     return
-  }
-  newTask.value.doc.assigned_to = newTask.value.doc.assigned_to?.value
-
-  if (newTask.value.doc.project?.value) {
-    newTask.value.doc.project = newTask.value.doc.project?.value
   }
 
   return newTask.value.submit().then((doc) => {

@@ -180,6 +180,58 @@
             </Button>
           </template>
         </Dialog>
+        <Dialog
+          :options="{
+            title: 'Pin discussion',
+          }"
+          @close="
+            () => {
+              pinDialog.show = false
+              pinDialog.pinGlobally = false
+            }
+          "
+          v-model="pinDialog.show"
+        >
+          <template #body-content>
+            <p class="text-p-base text-ink-gray-6 mb-3">
+              When a discussion is pinned, it shows up on top of the discussion list.
+            </p>
+
+            <div class="space-y-2">
+              <label class="flex items-center justify-between">
+                <div>
+                  <div class="text-base font-medium text-ink-gray-9 mb-1">Pin Globally</div>
+                  <div class="text-sm text-ink-gray-5" v-if="pinDialog.pinGlobally">
+                    Show in all discussions
+                  </div>
+                  <div class="text-sm text-ink-gray-5" v-else>Show in {{ space?.title }} only</div>
+                </div>
+                <Switch size="sm" v-model="pinDialog.pinGlobally" />
+              </label>
+            </div>
+          </template>
+          <template #actions>
+            <div class="flex">
+              <Button
+                class="ml-auto"
+                variant="solid"
+                :loading="discussion.pinDiscussion.loading"
+                @click="
+                  () => {
+                    discussion.pinDiscussion
+                      .submit({ pin_scope: pinDialog.pinGlobally ? 'Global' : 'Space' })
+                      .then(() => {
+                        pinDialog.show = false
+                        pinDialog.pinGlobally = false
+                      })
+                  }
+                "
+              >
+                Pin Discussion
+              </Button>
+            </div>
+          </template>
+        </Dialog>
         <RevisionsDialog
           v-model="showRevisionsDialog"
           doctype="GP Discussion"
@@ -202,7 +254,16 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, reactive, useTemplateRef } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Combobox, Avatar, Dropdown, Dialog, Tooltip, usePageMeta, dayjsLocal } from 'frappe-ui'
+import {
+  Combobox,
+  Avatar,
+  Dropdown,
+  Dialog,
+  Tooltip,
+  usePageMeta,
+  dayjsLocal,
+  Switch,
+} from 'frappe-ui'
 import { until } from '@vueuse/core'
 import Reactions from './Reactions.vue'
 import UserAvatarWithHover from './UserAvatarWithHover.vue'
@@ -248,6 +309,13 @@ const discussionMoveDialog = reactive<{
 }>({
   show: false,
   project: null,
+})
+const pinDialog = reactive<{
+  show: boolean
+  pinGlobally: boolean
+}>({
+  show: false,
+  pinGlobally: false,
 })
 const showRevisionsDialog = ref(false)
 
@@ -387,28 +455,22 @@ const actions = computed(() => [
     icon: 'arrow-up-left',
     condition: () => !discussion.doc?.pinned_at,
     onClick: () => {
-      createDialog({
-        title: 'Pin discussion',
-        message: `When a discussion is pinned, it shows up on top of the discussion list in ${space.value?.title}. Do you want to pin this discussion?`,
-        icon: { name: 'arrow-up-left' },
-        actions: [
-          {
-            label: 'Pin',
-            onClick: ({ close }) => discussion.pinDiscussion.submit().then(close),
-            variant: 'solid',
-          },
-        ],
-      })
+      pinDialog.show = true
     },
   },
   {
     label: 'Unpin discussion...',
     icon: 'arrow-down-left',
-    condition: () => discussion.doc?.pinned_at,
+    condition: () => !!discussion.doc?.pinned_at,
     onClick: () => {
+      const scopeText =
+        discussion.doc?.pin_scope === 'Global'
+          ? 'This discussion is pinned globally across all spaces.'
+          : `This discussion is pinned in ${space.value?.title} only.`
+
       createDialog({
         title: 'Unpin discussion',
-        message: `Do you want to unpin this discussion?`,
+        message: `${scopeText} Do you want to unpin it?`,
         icon: { name: 'arrow-down-left' },
         actions: [
           {

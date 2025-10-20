@@ -155,11 +155,12 @@ class GPDiscussion(HasActivity, HasMentions, HasReactions, HasTags, Document):
 		self.save()
 
 	@frappe.whitelist()
-	def pin_discussion(self):
+	def pin_discussion(self, pin_scope="Global"):
 		if self.pinned_at:
 			return
 		self.pinned_at = frappe.utils.now()
 		self.pinned_by = frappe.session.user
+		self.pin_scope = pin_scope
 		self.log_activity("Discussion Pinned")
 		self.save()
 
@@ -169,6 +170,7 @@ class GPDiscussion(HasActivity, HasMentions, HasReactions, HasTags, Document):
 			return
 		self.pinned_at = None
 		self.pinned_by = None
+		self.pin_scope = None
 		self.log_activity("Discussion Unpinned")
 		self.save()
 

@@ -21,6 +21,7 @@
   "closed_at",
   "closed_by",
   "pinned_at",
+  "pin_scope",
   "pinned_by",
   "comments_count",
   "participants_count"
@@ -136,12 +137,19 @@
    "fieldtype": "Table",
    "label": "Tags",
    "options": "GP Tag Link"
+  },
+  {
+   "default": "Global",
+   "fieldname": "pin_scope",
+   "fieldtype": "Select",
+   "label": "Pin Scope",
+   "options": "Global\nSpace"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-31 19:13:17.867939",
+ "modified": "2025-10-20 20:19:55.468697",
  "modified_by": "faris@erpnext.com",
  "module": "Gameplan",
  "name": "GP Discussion",

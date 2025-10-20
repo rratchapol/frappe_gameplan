@@ -40,16 +40,11 @@ export let Dialogs = {
             ]
           },
           actions: ({ close }) => {
-            let fullWidth = dialog.actions?.length === 1
             return (
               <div class="flex justify-end gap-2">
                 {dialog.actions?.map((action) => {
                   return (
-                    <Button
-                      key={action.label}
-                      {...buttonProps(action, close)}
-                      class={fullWidth ? 'w-full' : ''}
-                    >
+                    <Button key={action.label} {...buttonProps(action, close)}>
                       {action.label}
                     </Button>
                   )

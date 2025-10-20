@@ -43,7 +43,7 @@ export function useDiscussion(discussionId: MaybeRefOrGetter<string>) {
     trackVisit: () => void
     closeDiscussion: () => void
     reopenDiscussion: () => void
-    pinDiscussion: () => void
+    pinDiscussion: (data: { pin_scope: 'Global' | 'Space' }) => void
     unpinDiscussion: () => void
     addBookmark: () => void
     removeBookmark: () => void

@@ -65,7 +65,26 @@ const discussions = useDiscussions({
 })
 
 const pinnedDiscussions = useDiscussions({
-  filters: () => ({ ...toValue(props.filters), pinned_at: ['is', 'set'] }),
+  filters: () => {
+    const baseFilters = toValue(props.filters)
+
+    // If viewing a specific space (project filter exists)
+    if (baseFilters?.project) {
+      // Show only space-scoped pins for this specific project
+      return {
+        ...baseFilters,
+        pinned_at: ['is', 'set'],
+        pin_scope: 'Space',
+      }
+    } else {
+      // When viewing all discussions/global view, show only global pins
+      return {
+        ...baseFilters,
+        pinned_at: ['is', 'set'],
+        pin_scope: 'Global',
+      }
+    }
+  },
   orderBy: 'pinned_at desc' as OrderBy,
   limit: 99999,
   cacheKey: props.cacheKey ? ['pinned', props.cacheKey] : undefined,

@@ -50,7 +50,7 @@
 import { Dialog, ErrorMessage, FormControl, TextInput } from 'frappe-ui'
 import IconPicker from './IconPicker.vue'
 import { useSpace } from '@/data/spaces'
-import { useDoctype } from 'frappe-ui/src/data-fetching'
+import { useDoctype } from 'frappe-ui'
 import { GPProject } from '@/types/doctypes'
 import { vFocus } from '@/directives'
 

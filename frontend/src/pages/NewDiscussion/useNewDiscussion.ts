@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, provide, inject, watch, type InjectionKey } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useLocalStorage } from '@vueuse/core'
-import { useDoc, useNewDoc, useDoctype } from 'frappe-ui/src/data-fetching'
+import { useDoc, useNewDoc, useDoctype } from 'frappe-ui'
 import { debounce } from 'frappe-ui'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
 import { useSessionUser, useUser } from '@/data/users'

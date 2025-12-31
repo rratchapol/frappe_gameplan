@@ -103,7 +103,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Dropdown, Tooltip, dayjsLocal } from 'frappe-ui'
-import { useList } from 'frappe-ui/src/data-fetching'
+import { useList } from 'frappe-ui'
 import { copyToClipboard } from '@/utils'
 import UserProfileLink from './UserProfileLink.vue'
 import CommentEditor from './CommentEditor.vue'

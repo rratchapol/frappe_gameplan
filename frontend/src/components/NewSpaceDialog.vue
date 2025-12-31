@@ -73,7 +73,7 @@ import {
   type ComboboxOption,
 } from 'frappe-ui'
 import IconPicker from './IconPicker.vue'
-import { useNewDoc } from 'frappe-ui/src/data-fetching'
+import { useNewDoc } from 'frappe-ui'
 import { GPProject } from '@/types/doctypes'
 import { spaces } from '@/data/spaces'
 import { computed, ref, watch } from 'vue'

@@ -1,8 +1,4 @@
-@import 'frappe-ui/src/fonts/Inter/inter.css';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'frappe-ui/style.css';
 
 /* disable webkit tap highlight color */
 body {

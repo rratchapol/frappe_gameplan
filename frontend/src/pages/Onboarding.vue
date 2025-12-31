@@ -126,7 +126,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCall } from 'frappe-ui/src/data-fetching'
+import { useCall } from 'frappe-ui'
 import UserDropdown from '@/components/UserDropdown.vue'
 import { joinedSpaces, spaces } from '@/data/spaces'
 import { teams } from '@/data/teams'

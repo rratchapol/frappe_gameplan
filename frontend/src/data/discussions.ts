@@ -1,6 +1,6 @@
 import { MaybeRefOrGetter, toValue } from 'vue'
-import { useDoc, useList } from 'frappe-ui/src/data-fetching'
-import { UseListOptions } from 'frappe-ui/src/data-fetching/useList/types'
+import { useDoc, useList } from 'frappe-ui'
+import { UseListOptions } from 'frappe-ui'
 import { GPDiscussion } from '@/types/doctypes'
 
 export interface Discussion extends GPDiscussion {

@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { computed, toValue } from 'vue'
-import type { OrderBy } from 'frappe-ui/src/data-fetching/useList/types'
+import type { OrderBy } from 'frappe-ui'
 import { UseDiscussionOptions, useDiscussions } from '@/data/discussions'
 import DiscussionRow from './DiscussionRow.vue'
 import EmptyStateBox from './EmptyStateBox.vue'

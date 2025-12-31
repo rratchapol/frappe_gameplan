@@ -28,7 +28,7 @@
 <script>
 import { EditorContent } from '@tiptap/vue-3'
 import TextEditor from '@/components/TextEditor.vue'
-import { TextEditorFixedMenu } from 'frappe-ui/src/components/TextEditor'
+import { TextEditorFixedMenu } from 'frappe-ui'
 
 export default {
   name: 'CommentEditor',

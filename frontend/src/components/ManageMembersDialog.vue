@@ -74,8 +74,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
-import { Combobox, FormLabel, toast, Tooltip } from 'frappe-ui'
-import { useDoctype, useList } from 'frappe-ui/src/data-fetching'
+import { Combobox, FormLabel, toast, Tooltip, useDoctype, useList } from 'frappe-ui'
 import { useSpace } from '@/data/spaces'
 import { useUser, users } from '@/data/users'
 import { GPGuestAccess, GPInvitation, GPProject } from '@/types/doctypes'

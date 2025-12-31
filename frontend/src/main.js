@@ -13,6 +13,7 @@ import {
   frappeRequest,
   pageMetaPlugin,
   resourcesPlugin,
+  useCall,
 } from 'frappe-ui'
 import * as Sentry from '@sentry/vue'
 import router from './router'
@@ -57,14 +58,18 @@ app.config.globalProperties.$isSessionUser = isSessionUser
 
 let socket
 if (import.meta.env.DEV) {
-  frappeRequest({ url: '/api/method/gameplan.www.g.get_context_for_dev' }).then((values) => {
-    for (let key in values) {
-      window[key] = values[key]
-    }
-    window.system_timezone && setConfig('systemTimezone', window.system_timezone)
-    socket = initSocket()
-    app.config.globalProperties.$socket = socket
-    app.mount('#app')
+  useCall({
+    url: '/api/v2/method/gameplan.www.g.get_context_for_dev',
+    method: 'POST',
+    onSuccess(values) {
+      for (let key in values) {
+        window[key] = values[key]
+      }
+      window.system_timezone && setConfig('systemTimezone', window.system_timezone)
+      socket = initSocket()
+      app.config.globalProperties.$socket = socket
+      app.mount('#app')
+    },
   })
 } else {
   window.system_timezone && setConfig('systemTimezone', window.system_timezone)

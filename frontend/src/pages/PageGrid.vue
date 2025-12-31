@@ -65,11 +65,9 @@
 </template>
 
 <script setup lang="ts">
-import { Dropdown } from 'frappe-ui'
-import { useList } from 'frappe-ui/src/data-fetching'
+import { Dropdown, useList, UseListOptions } from 'frappe-ui'
 import EmptyStateBox from '@/components/EmptyStateBox.vue'
 import { createDialog } from '@/utils/dialogs'
-import { UseListOptions } from 'frappe-ui/src/data-fetching/useList/types'
 import { GPPage } from '@/types/doctypes'
 import { useSpace } from '@/data/spaces'
 

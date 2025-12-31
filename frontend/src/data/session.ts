@@ -1,5 +1,5 @@
 import { computed, MaybeRef, reactive, ref } from 'vue'
-import { useCall } from 'frappe-ui/src/data-fetching'
+import { useCall } from 'frappe-ui'
 import { users } from './users'
 import router from '@/router'
 

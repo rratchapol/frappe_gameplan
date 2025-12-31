@@ -1,4 +1,4 @@
-import { useCall } from 'frappe-ui/src/data-fetching'
+import { useCall } from 'frappe-ui'
 
 export let unreadNotifications = useCall({
   cacheKey: 'Unread Notifications Count',

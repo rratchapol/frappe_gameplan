@@ -91,7 +91,7 @@ import {
   ComboboxOption,
   TransitionRoot,
 } from '@headlessui/vue'
-import Popover from 'frappe-ui/src/components/Popover.vue'
+import { Popover } from 'frappe-ui'
 
 export default {
   name: 'InputWithPills',

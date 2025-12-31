@@ -144,7 +144,7 @@ def invite_by_email(emails: str, role: str, projects: list = None):
 def unread_notifications():
 	res = frappe.db.get_all(
 		"GP Notification",
-		"count(name) as count",
+		[{"COUNT": "name", "as": "count"}],
 		{"to_user": frappe.session.user, "read": 0},
 	)
 	return res[0].count

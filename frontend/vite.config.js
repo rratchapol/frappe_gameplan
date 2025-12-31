@@ -2,13 +2,39 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
+import { existsSync, readdirSync } from 'node:fs'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development'
-  const frappeui = await importFrappeUIPlugin(isDev)
 
-  const config = {
+  // Setup local frappe-ui for development
+  const localFrappeUIPath = path.resolve(__dirname, '../frappe-ui')
+  const useLocalFrappeUI = isDev && existsSync(path.join(localFrappeUIPath, 'node_modules'))
+
+  if (isDev && existsSync(localFrappeUIPath) && !useLocalFrappeUI) {
+    console.warn('⚠️  Local frappe-ui found but dependencies not installed.')
+    console.warn('   Run: cd ../frappe-ui && yarn install')
+  }
+
+  const frappeui = await importFrappeUIPlugin(useLocalFrappeUI)
+
+  // Base aliases shared across all modes
+  const baseAliases = {
+    '@': path.resolve(__dirname, 'src'),
+    'tailwind.config.js': path.resolve(__dirname, 'tailwind.config.js'),
+  }
+
+  // Local frappe-ui aliases for development
+  const localFrappeUIAliases = useLocalFrappeUI
+    ? {
+        // CSS alias must come before general alias for proper resolution
+        'frappe-ui/style.css': path.resolve(localFrappeUIPath, 'src', 'style.css'),
+        'frappe-ui': localFrappeUIPath,
+      }
+    : {}
+
+  return {
     define: {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
     },
@@ -62,62 +88,55 @@ export default defineConfig(async ({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src'),
-        'tailwind.config.js': path.resolve(__dirname, 'tailwind.config.js'),
+        ...localFrappeUIAliases,
+        ...baseAliases,
+        // TipTap aliases to prevent duplicate instances when using local frappe-ui
+        ...getTipTapAliases(useLocalFrappeUI, localFrappeUIPath),
       },
     },
     optimizeDeps: {
-      include: ['feather-icons', 'showdown', 'tailwind.config.js'],
+      include: ['feather-icons', 'tailwind.config.js'],
     },
   }
-
-  // Add local frappe-ui alias only in development if the local frappe-ui exists
-  if (isDev) {
-    try {
-      // Check if the local frappe-ui directory exists
-      const fs = await import('node:fs')
-      const localFrappeUIPath = path.resolve(__dirname, '../frappe-ui')
-      if (fs.existsSync(localFrappeUIPath)) {
-        config.resolve.alias['frappe-ui'] = localFrappeUIPath
-
-        // Dynamically resolve TipTap packages to avoid error: Adding different instances of a keyed plugin
-        const gameplanNodeModules = path.resolve(__dirname, 'node_modules/@tiptap')
-        const frappeUINodeModules = path.resolve(localFrappeUIPath, 'node_modules/@tiptap')
-
-        const gameplanTiptapPackages = fs.readdirSync(gameplanNodeModules)
-        const frappeUITiptapPackages = fs.readdirSync(frappeUINodeModules)
-
-        // Find packages that exist in both locations
-        const commonTiptapPackages = gameplanTiptapPackages.filter((pkg) =>
-          frappeUITiptapPackages.includes(pkg),
-        )
-
-        // Alias common packages to gameplan's node_modules to ensure single instance
-        commonTiptapPackages.forEach((pkg) => {
-          const packageName = `@tiptap/${pkg}`
-          config.resolve.alias[packageName] = path.resolve(__dirname, 'node_modules', packageName)
-        })
-      } else {
-        console.warn('Local frappe-ui directory not found, using npm package')
-      }
-    } catch (error) {
-      console.warn('Error checking for local frappe-ui, using npm package:', error.message)
-    }
-  }
-
-  return config
 })
 
-async function importFrappeUIPlugin(isDev) {
-  if (isDev) {
-    try {
-      const module = await import('../frappe-ui/vite')
-      return module.default
-    } catch (error) {
-      console.warn('Local frappe-ui not found, falling back to npm package:', error.message)
-    }
+/**
+ * Get TipTap package aliases to prevent duplicate instances
+ * when using local frappe-ui alongside gameplan's node_modules
+ */
+function getTipTapAliases(useLocalFrappeUI, localFrappeUIPath) {
+  if (!useLocalFrappeUI) return {}
+
+  const gameplanTiptap = path.join(__dirname, 'node_modules/@tiptap')
+  const frappeUITiptap = path.join(localFrappeUIPath, 'node_modules/@tiptap')
+
+  if (!existsSync(gameplanTiptap) || !existsSync(frappeUITiptap)) {
+    return {}
   }
-  // Fall back to npm package if local import fails
-  const module = await import('frappe-ui/vite')
-  return module.default
+
+  const commonPackages = readdirSync(gameplanTiptap).filter((pkg) =>
+    readdirSync(frappeUITiptap).includes(pkg),
+  )
+
+  return Object.fromEntries(
+    commonPackages.map((pkg) => [`@tiptap/${pkg}`, path.join(gameplanTiptap, pkg)]),
+  )
+}
+
+/**
+ * Import frappe-ui Vite plugin from local copy or npm package
+ */
+async function importFrappeUIPlugin(useLocal) {
+  const modulePath = useLocal ? '../frappe-ui/vite/index.js' : 'frappe-ui/vite'
+
+  try {
+    return (await import(modulePath)).default
+  } catch (error) {
+    if (useLocal) {
+      console.warn('⚠️  Failed to import local frappe-ui plugin, falling back to npm package')
+      console.warn('   Error:', error.message)
+      return (await import('frappe-ui/vite')).default
+    }
+    throw error
+  }
 }

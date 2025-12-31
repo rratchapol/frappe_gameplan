@@ -15,7 +15,7 @@ export interface DraftMethods {
 }
 
 export type DraftDocument = ReturnType<
-  typeof import('frappe-ui/src/data-fetching').useDoc<GPDraft, DraftMethods>
+  typeof import('frappe-ui').useDoc<GPDraft, DraftMethods>
 > | null
 
 // Callback parameter types

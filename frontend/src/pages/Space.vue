@@ -15,12 +15,10 @@
   </router-view>
 </template>
 <script setup lang="ts">
-import { onMounted, h } from 'vue'
-import { Breadcrumbs } from 'frappe-ui'
+import { onMounted } from 'vue'
+import { useDoctype } from 'frappe-ui'
 import SpaceOptions from '@/components/SpaceOptions.vue'
-import LucideLock from '~icons/lucide/lock'
 import { useSpace, spaces as spaceList } from '@/data/spaces'
-import { useDoctype } from 'frappe-ui/src/data-fetching'
 import { GPProject } from '@/types/doctypes'
 import EmptyStateBox from '@/components/EmptyStateBox.vue'
 import SpaceBreadcrumbs from '@/components/SpaceBreadcrumbs.vue'

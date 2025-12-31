@@ -52,11 +52,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Select, Breadcrumbs } from 'frappe-ui'
-import { useNewDoc } from 'frappe-ui/src/data-fetching'
+import { useNewDoc } from 'frappe-ui'
 import { useSessionUser } from '@/data/users'
 import PageGrid from './PageGrid.vue'
 import { GPPage } from '@/types/doctypes'
-import { UseListOptions } from 'frappe-ui/src/data-fetching/useList/types'
+import { UseListOptions } from 'frappe-ui'
 
 const router = useRouter()
 const sessionUser = useSessionUser()

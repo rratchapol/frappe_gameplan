@@ -90,7 +90,7 @@
 import TextEditor from '@/components/TextEditor.vue'
 import { vFocus } from '@/directives'
 import UserProfileLink from '@/components/UserProfileLink.vue'
-import TextEditorFixedMenu from 'frappe-ui/src/components/TextEditor/TextEditorFixedMenu.vue'
+import { TextEditorFixedMenu } from 'frappe-ui'
 
 export default {
   name: 'ProjectDiscussionNew',

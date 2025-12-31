@@ -107,7 +107,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Tooltip } from 'frappe-ui'
-import { useCall, useList } from 'frappe-ui/src/data-fetching'
+import { useCall, useList } from 'frappe-ui'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
 import MultiSelect from '@/components/MultiSelect.vue'
 import { GPInvitation } from '@/types/doctypes'

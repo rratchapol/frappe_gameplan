@@ -1,5 +1,5 @@
 import { GPTask } from '@/types/doctypes'
-import { useNewDoc } from 'frappe-ui/src/data-fetching'
+import { useNewDoc } from 'frappe-ui'
 import { ref } from 'vue'
 
 export const showDialog = ref(false)

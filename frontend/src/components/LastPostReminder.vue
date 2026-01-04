@@ -24,7 +24,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useCall } from 'frappe-ui/src/data-fetching'
+import { useCall } from 'frappe-ui'
 import { dayjs } from 'frappe-ui'
 import { computed } from 'vue'
 import { useLocalStorage } from '@vueuse/core'

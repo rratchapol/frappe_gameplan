@@ -30,7 +30,7 @@
               class="size-4 border border-outline-gray-2 group-data-[state=checked]:bg-surface-gray-7 rounded-full grid place-content-center"
             >
               <RadioGroupIndicator>
-                <CircleCheck class="text-ink-white size-4.5" />
+                <CircleCheckIcon class="text-ink-white size-4.5" />
               </RadioGroupIndicator>
             </div>
             <div class="ml-2 text-left">
@@ -50,7 +50,7 @@ import { Dialog, Select } from 'frappe-ui'
 import { RadioGroupRoot, RadioGroupItem, RadioGroupIndicator } from 'reka-ui'
 import { useRouter } from 'vue-router'
 import { usePreferredHomePage } from '@/composables/usePreferredHomePage'
-import CircleCheck from 'frappe-ui/src/icons/CircleCheck.vue'
+import { CircleCheckIcon } from 'frappe-ui/icons'
 
 const props = defineProps<{
   modelValue: boolean

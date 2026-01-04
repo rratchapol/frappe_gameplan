@@ -1,5 +1,5 @@
 import { computed, reactive } from 'vue'
-import { useCall } from 'frappe-ui/src/data-fetching'
+import { useCall } from 'frappe-ui'
 import router from '@/router'
 import { session } from './session'
 

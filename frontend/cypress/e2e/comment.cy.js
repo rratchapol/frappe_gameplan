@@ -32,11 +32,9 @@ describe('Comment', () => {
         })
           .its('body.message')
           .then((discussion) => {
-            cy.intercept('POST', '/api/method/frappe.client.get', (req) => {
-              if (req.body.hasOwnProperty('doctype') && req.body.doctype === 'GP Discussion') {
-                req.alias = 'getDiscussion'
-              }
-            })
+            cy.intercept('GET', `/api/v2/document/GP%20Discussion/${discussion.name}`).as(
+              'getDiscussion',
+            )
             cy.visit(`/g/engineering/projects/${project}/discussion/${discussion.name}`)
             cy.wait('@getDiscussion')
           })
@@ -44,18 +42,18 @@ describe('Comment', () => {
 
     cy.intercept({
       method: 'POST',
-      url: '/api/method/frappe.client.insert',
+      url: '/api/v2/document/GP%20Comment',
       times: 1,
     }).as('comment')
     cy.button('Add a comment').click()
     cy.focused().type('This is the first comment{enter}')
     cy.button('Submit').click()
     cy.wait('@comment')
-      .its('response.body.message.content')
+      .its('response.body.data.content')
       .should('contain', 'This is the first comment')
 
     cy.get('@comment')
-      .its('response.body.message')
+      .its('response.body.data')
       .then((comment) => {
         cy.intercept({
           method: 'POST',
@@ -84,19 +82,20 @@ describe('Comment', () => {
           .type('{enter}@john{enter}', { delay: 100 }) // mention user
         cy.button('Submit').click()
         cy.get(`div[data-id=${comment.name}]`).contains('This is an edited comment').should('exist')
-        cy.get(`div[data-id=${comment.name}] .mention[data-id="john@example.com"]`).should('exist')
+        cy.get(
+          `div[data-id=${comment.name}] [data-type="mention"][data-id="john@example.com"]`,
+        ).should('exist')
 
         // delete comment
         cy.intercept({
-          method: 'POST',
-          url: '/api/method/frappe.client.set_value',
+          method: 'DELETE',
+          url: `/api/v2/document/GP%20Comment/${comment.name}`,
         }).as('deleteComment')
         cy.get(`div[data-id=${comment.name}] button[aria-label="Comment Options"]`).click()
         cy.button('Delete').click()
         cy.dialog('button:contains("Delete")').click()
         cy.wait('@deleteComment')
-        console.log(cy.get(`div[data-id=${comment.name}]`).contains('This message is deleted'))
-        cy.get(`div[data-id=${comment.name}]`).contains('This message is deleted').should('exist')
+        cy.get(`div[data-id=${comment.name}]`).should('not.exist')
       })
   })
 })

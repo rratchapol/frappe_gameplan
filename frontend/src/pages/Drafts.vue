@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { Tooltip, dayjsLocal, Breadcrumbs, Button } from 'frappe-ui'
 import { GPDraft } from '@/types/doctypes'
-import { useList } from 'frappe-ui/src/data-fetching'
+import { useList } from 'frappe-ui'
 import UserAvatarWithHover from '@/components/UserAvatarWithHover.vue'
 import { useSpace } from '@/data/spaces'
 import { relativeTimestamp } from '@/utils'

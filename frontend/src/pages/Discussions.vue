@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue'
 import { Breadcrumbs, Select, TabButtons, usePageMeta } from 'frappe-ui'
-import type { OrderBy } from 'frappe-ui/src/data-fetching/useList/types'
+import type { OrderBy } from 'frappe-ui'
 import DiscussionList from '@/components/DiscussionList.vue'
 import LastPostReminder from '@/components/LastPostReminder.vue'
 import { useRouter } from 'vue-router'

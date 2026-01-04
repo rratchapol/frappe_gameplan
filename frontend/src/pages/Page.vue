@@ -116,7 +116,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Breadcrumbs, TextEditor, usePageMeta, debounce, dayjsLocal } from 'frappe-ui'
-import { useDoc } from 'frappe-ui/src/data-fetching'
+import { useDoc } from 'frappe-ui'
 import { useSpace } from '@/data/spaces'
 import { GPPage } from '@/types/doctypes'
 import SpaceBreadcrumbs from '@/components/SpaceBreadcrumbs.vue'

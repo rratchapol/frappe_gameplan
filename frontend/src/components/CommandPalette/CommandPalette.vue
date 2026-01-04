@@ -108,7 +108,7 @@ import {
 } from 'vue'
 import { RouteLocationRaw, useRouter } from 'vue-router'
 import { dayjs, debounce } from 'frappe-ui'
-import { useCall, useNewDoc } from 'frappe-ui/src/data-fetching'
+import { useCall, useNewDoc } from 'frappe-ui'
 import fuzzysort from 'fuzzysort'
 import { activeUsers, useUser } from '@/data/users'
 import ItemProject from './ItemProject.vue'

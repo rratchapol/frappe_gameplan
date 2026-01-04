@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { FormControl } from 'frappe-ui'
-import { useCall } from 'frappe-ui/src/data-fetching'
+import { useCall } from 'frappe-ui'
 import { session } from '@/data/session'
 import GameplanLogo from '@/components/GameplanLogo.vue'
 import GameplanLogoType from '@/components/GameplanLogoType.vue'

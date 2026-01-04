@@ -1,5 +1,5 @@
 import { computed, MaybeRefOrGetter, toValue } from 'vue'
-import { useList } from 'frappe-ui/src/data-fetching'
+import { useList } from 'frappe-ui'
 import { GPTeam } from '@/types/doctypes'
 
 export interface Team

@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { Dialog, FormControl, Button } from 'frappe-ui'
-import { useDoctype } from 'frappe-ui/src/data-fetching'
+import { useDoctype } from 'frappe-ui'
 import { vFocus } from '@/directives'
 import type { GPTeam } from '@/types/doctypes'
 import type { GroupedSpaceItem } from '@/data/groupedSpaces'

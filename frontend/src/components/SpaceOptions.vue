@@ -1,5 +1,5 @@
 <template>
-  <DropdownMoreOptions v-bind="$attrs" :options="options" />
+  <DropdownMoreOptions label="Space Options" v-bind="$attrs" :options="options" />
 
   <MergeSpaceDialog v-model="showSpaceMergeDialog" :spaceId="props.spaceId" />
   <ChangeSpaceCategoryDialog v-model="showSpaceCategoryDialog" :spaceId="props.spaceId" />
@@ -8,7 +8,7 @@
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useDoctype } from 'frappe-ui/src/data-fetching'
+import { useDoctype } from 'frappe-ui'
 import DropdownMoreOptions from './DropdownMoreOptions.vue'
 import MergeSpaceDialog from './MergeSpaceDialog.vue'
 import ChangeSpaceCategoryDialog from './ChangeSpaceCategoryDialog.vue'

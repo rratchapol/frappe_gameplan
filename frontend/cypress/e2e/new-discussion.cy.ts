@@ -31,8 +31,7 @@ describe('New Discussion - Draft Functionality', () => {
 
   it('should create, save, and verify a draft', () => {
     // Navigate to new discussion page via proper flow
-    cy.visit('/g/discussions')
-    cy.button('Drafts').click()
+    cy.visit('/g/drafts')
     cy.button('Add new').click()
 
     // Verify page loads correctly
@@ -41,17 +40,17 @@ describe('New Discussion - Draft Functionality', () => {
     cy.get('[contenteditable=true]').should('exist')
 
     // create the draft
-    cy.get('textarea[placeholder="Title"]').type('My Draft Discussion')
+    cy.get('textarea[placeholder="Title"]').type('My Draft Discussion{enter}')
     cy.get('[contenteditable=true]').click().type('This is my draft content that should be saved.')
     cy.combobox('Select Space').click().type('Gameplan').type('{enter}')
-    cy.button('Save Draft').click()
+    cy.wait(500) // wait for draft to be saved
 
     // Go back to drafts
-    cy.visit('/g/discussions/drafts')
+    cy.visit('/g/drafts')
 
     // Verify if the draft was created
     cy.contains('My Draft Discussion').should('exist')
-    cy.contains('Gameplan: This is my draft content that should be saved.').should('exist')
+    cy.contains('This is my draft content that should be saved.').should('exist')
 
     // Click on the draft to edit it
     cy.contains('My Draft Discussion').click()
@@ -72,7 +71,7 @@ describe('New Discussion - Draft Functionality', () => {
     cy.contains('This is my updated draft content. Ready to publish!').should('exist')
 
     // Go back to drafts and verify the draft no longer exists
-    cy.visit('/g/discussions/drafts')
+    cy.visit('/g/drafts')
     cy.contains('My Draft Discussion').should('not.exist')
   })
 })

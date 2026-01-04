@@ -1,6 +1,6 @@
 import { ref, computed, watch, type Ref, type ComputedRef } from 'vue'
 import { debounce } from 'frappe-ui'
-import { useNewDoc, useDoc } from 'frappe-ui/src/data-fetching'
+import { useNewDoc, useDoc } from 'frappe-ui'
 import { useRouter } from 'vue-router'
 import type { GPDraft } from '@/types/doctypes'
 import type { DraftData, DraftDocument, DraftMethods } from './types'
@@ -15,15 +15,15 @@ export interface AutoSaveStatus {
 export function useAutoSave(
   draftData: Ref<DraftData>,
   draftDoc: Ref<DraftDocument>,
-  isDraftChanged: ComputedRef<boolean>
+  isDraftChanged: ComputedRef<boolean>,
 ) {
   const router = useRouter()
-  
+
   const saveStatus = ref<AutoSaveStatus>({
     isSaving: false,
     lastSaved: null,
     hasUnsavedChanges: false,
-    error: null
+    error: null,
   })
 
   const canAutoSave = computed(() => {
@@ -41,11 +41,11 @@ export function useAutoSave(
     })
 
     const doc = await draft.submit()
-    
+
     // Update URL to include draft ID without navigation
     const newQuery = { ...router.currentRoute.value.query, draft: doc.name }
     router.replace({ query: newQuery })
-    
+
     // Set up the draft document for future updates
     draftDoc.value = useDoc<GPDraft, DraftMethods>({
       doctype: 'GP Draft',
@@ -54,7 +54,7 @@ export function useAutoSave(
         publish: 'publish',
       },
     })
-    
+
     return doc
   }
 
@@ -80,7 +80,7 @@ export function useAutoSave(
       } else {
         await createDraft()
       }
-      
+
       saveStatus.value.lastSaved = new Date()
       saveStatus.value.hasUnsavedChanges = false
     } catch (error) {
@@ -105,14 +105,15 @@ export function useAutoSave(
   watch(
     () => [draftData.value.title, draftData.value.content, draftData.value.project],
     () => {
-      const hasContent = draftData.value.title.trim() || draftData.value.content.trim() || draftData.value.project
-      
+      const hasContent =
+        draftData.value.title.trim() || draftData.value.content.trim() || draftData.value.project
+
       if (hasContent && canAutoSave.value) {
         saveStatus.value.hasUnsavedChanges = true
         debouncedSave()
       }
     },
-    { flush: 'post' }
+    { flush: 'post' },
   )
 
   return {
@@ -120,6 +121,6 @@ export function useAutoSave(
     canAutoSave,
     debouncedSave,
     immediateSave,
-    performSave
+    performSave,
   }
 }

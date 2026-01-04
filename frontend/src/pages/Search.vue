@@ -195,7 +195,7 @@
 import { ref, onMounted, onUnmounted, computed, useTemplateRef } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Breadcrumbs, TextInput, debounce, usePageMeta, Tooltip, dayjs } from 'frappe-ui'
-import { useCall, useNewDoc } from 'frappe-ui/src/data-fetching'
+import { useCall, useNewDoc } from 'frappe-ui'
 import { GPSearchFeedback } from '@/types/doctypes'
 import { useSessionUser } from '@/data/users'
 import UserAvatarWithHover from '@/components/UserAvatarWithHover.vue'

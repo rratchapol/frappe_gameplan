@@ -101,14 +101,14 @@ class GameplanSearch(SQLiteSearch):
 				self._tags_cache[cache_key] = []
 			self._tags_cache[cache_key].append(tag_link["label"])
 
-	def build_index(self):
+	def build_index(self, **kwargs):
 		"""Build search index with optimized tag loading."""
 		# Pre-load all tags for bulk indexing performance
 		self._load_all_tags()
 
 		try:
 			# Call parent build_index method
-			super().build_index()
+			super().build_index(**kwargs)
 		finally:
 			# Clear tags cache after indexing to free memory
 			if hasattr(self, "_tags_cache"):

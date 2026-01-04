@@ -7,7 +7,12 @@
     v-model="show"
   >
     <template #body-content>
-      <Combobox :options="teamOptions" v-model="selectedTeam" placeholder="Select a team" v-focus />
+      <Combobox
+        :options="teamOptions"
+        v-model="selectedTeam"
+        placeholder="Select a category"
+        v-focus
+      />
       <ErrorMessage class="mt-2" :message="spaces.runDocMethod.error" />
     </template>
     <template #actions>
@@ -28,7 +33,7 @@ import { computed, ref } from 'vue'
 import { Combobox } from 'frappe-ui'
 import { activeTeams } from '@/data/teams'
 import { useSpace } from '@/data/spaces'
-import { useDoctype } from 'frappe-ui/src/data-fetching'
+import { useDoctype } from 'frappe-ui'
 import { GPProject } from '@/types/doctypes'
 import { vFocus } from '@/directives'
 

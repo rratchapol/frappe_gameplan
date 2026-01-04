@@ -40,7 +40,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Combobox } from 'frappe-ui'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
-import { useDoctype } from 'frappe-ui/src/data-fetching'
+import { useDoctype } from 'frappe-ui'
 import { GPProject } from '@/types/doctypes'
 import { useSpace } from '@/data/spaces'
 

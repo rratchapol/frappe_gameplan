@@ -46,6 +46,13 @@ declare global {
        * @param option - Option text to select
        */
       selectCombobox(placeholder: string, option: string): Chainable<void>
+
+      /**
+       * Custom command to select an option from a dropdown menu
+       * @param dropdownName - Aria-label of the dropdown button
+       * @param option - Option text to select from the dropdown
+       */
+      selectDropdownOption(dropdownName: string, option: string): Chainable<void>
     }
   }
 }
@@ -79,10 +86,18 @@ Cypress.Commands.add('dialog', (selector: string) => {
 
 Cypress.Commands.add('selectCombobox', (placeholder: string, option: string) => {
   // Click the combobox input to open dropdown
-  cy.get(`input[placeholder="${placeholder}"]`).click()
+  cy.get(`input[placeholder="${placeholder}"][role="combobox"]:visible`)
+    .click()
+    .clear()
+    .type(`${option}`)
 
   // Select the option from the dropdown
   cy.get('[role="option"]').contains(option).click()
+})
+
+Cypress.Commands.add('selectDropdownOption', (dropdownName: string, option: string) => {
+  cy.get(`button[aria-haspopup=menu][aria-label="${dropdownName}"]:visible`).click()
+  cy.get(`button[role="menuitem"]:contains("${option}"):visible`).click()
 })
 
 // Export for ES module compatibility

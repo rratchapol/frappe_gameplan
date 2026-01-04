@@ -1,22 +1,10 @@
 {
+  "extends": "frappe-ui/tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "strict": true,
-    "jsx": "preserve",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "lib": ["ESNext", "DOM"],
-    "skipLibCheck": true,
-    "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "types": ["unplugin-icons/types/vue"]
+    }
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*", "vite/client"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }

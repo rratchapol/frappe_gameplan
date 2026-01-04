@@ -17,39 +17,34 @@ describe('Project', () => {
         },
       ],
     })
-    cy.visit('/g/engineering/')
 
-    cy.intercept('POST', '/api/method/frappe.client.insert').as('project')
-    cy.button('Add Project').click()
-    cy.contains('label', 'Title').parent().find('input').type('Project 1')
-    cy.get('button').contains('Create').click()
-    cy.get('h3:contains("Project 1")').should('exist')
+    cy.visit('/g/spaces')
+
+    cy.intercept('POST', '/api/v2/document/GP%20Project').as('project')
+    cy.button('Add new').click()
+    cy.get('input[placeholder="Space name"]').type('Project 1')
+    cy.get('button').contains('Submit').click()
+    cy.get('a:contains("Project 1")').click()
+    cy.get('header a:contains("Project 1")').should('exist')
     cy.wait('@project')
-      .its('response.body.message')
+      .its('response.body.data')
       .then((project) => {
-        cy.url().should('include', `/g/engineering/projects/${project.name}`)
+        cy.url().should('include', `/g/space/${project.name}`)
       })
 
-    // move to team
-    cy.get('button[aria-label="Options"]').click()
-    cy.get('button:contains("Move to another team")').click()
-    cy.get('button:contains("Select a team")').click()
-    cy.get('li:contains("DevOps")').click()
-    cy.get('button:contains("Move to DevOps")').click()
-    cy.get('@project')
-      .its('response.body.message')
-      .then((project) => {
-        cy.url().should('include', `/g/devops/projects/${project.name}`)
-      })
+    // move to category
+    cy.selectDropdownOption('Space Options', 'Change Category')
+    cy.selectCombobox('Select a category', 'DevOps')
+    cy.button('Move to DevOps').click()
+    cy.get('header a:contains("DevOps")').should('exist')
 
     // archive
-    cy.get('button[aria-label="Options"]').click()
-    cy.get('button:contains("Archive")').click()
+    cy.selectDropdownOption('Space Options', 'Archive')
     cy.button('Archive').click()
     cy.contains('div', 'Archived').should('exist')
-    cy.visit('/g/devops/')
-    cy.contains('Project 1').should('not.exist')
+    cy.visit('/g/spaces')
+    cy.contains('a', 'Project 1').should('not.exist')
     cy.get('button:contains("Archived")').click()
-    cy.contains('Project 1').should('exist')
+    cy.contains('a', 'Project 1').should('exist')
   })
 })

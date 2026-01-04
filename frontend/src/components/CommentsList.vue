@@ -94,7 +94,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useList } from 'frappe-ui/src/data-fetching'
+import { useList } from 'frappe-ui'
 import CommentEditor from '@/components/CommentEditor.vue'
 import Comment from './Comment.vue'
 import Activity from './Activity.vue'

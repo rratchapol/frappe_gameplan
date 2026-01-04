@@ -50,13 +50,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Dropdown } from 'frappe-ui'
-import { useNewDoc } from 'frappe-ui/src/data-fetching'
+import { Dropdown, useNewDoc, UseListOptions } from 'frappe-ui'
 import SpaceTabs from '@/components/SpaceTabs.vue'
 import PageGrid from './PageGrid.vue'
 import ArrowDownUp from '~icons/lucide/arrow-up-down'
 import { GPPage } from '@/types/doctypes'
-import { UseListOptions } from 'frappe-ui/src/data-fetching/useList/types'
 
 const props = defineProps<{
   spaceId: string

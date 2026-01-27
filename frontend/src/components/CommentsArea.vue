@@ -19,7 +19,7 @@
         </div>
       </div>
     </div>
-    <div :style="{ paddingBottom: `${addCommentHeight}px` }">
+    <div :style="{ paddingBottom: `${addCommentHeight + 80}px` }">
       <template v-for="(item, i) in timelineItems" :key="item.doctype + item.name">
         <div
           v-if="newMessagesFrom && newMessagesFrom == item.name"

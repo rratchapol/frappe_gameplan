@@ -74,9 +74,9 @@ def sanitize_content(html):
 		return html
 
 	tags = (
-		acceptable_elements
-		+ svg_elements
-		+ mathml_elements
+		list(acceptable_elements)
+		+ list(svg_elements)
+		+ list(mathml_elements)
 		+ ["html", "head", "meta", "link", "body", "style", "o:p", "iframe"]
 	)
 

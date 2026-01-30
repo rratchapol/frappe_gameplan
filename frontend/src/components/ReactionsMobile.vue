@@ -30,10 +30,7 @@
         </Motion>
       </div>
     </div>
-    <BottomSheet v-model="show">
-      <div class="px-4 pb-3 pt-2 text-center">
-        <div class="text-xl font-semibold text-ink-gray-9">Reactions</div>
-      </div>
+    <BottomSheet title="Reactions" v-model="show">
       <div class="border-b px-4 pb-4">
         <div class="grid grid-cols-5 items-center justify-center gap-2">
           <Motion

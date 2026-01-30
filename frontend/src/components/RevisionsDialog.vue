@@ -59,9 +59,9 @@
     </template>
   </Dialog>
 
-  <BottomSheet v-else v-model="sheetVisible" @close-complete="handleSheetCloseComplete">
+  <BottomSheet :title v-else v-model="sheetVisible" @close-complete="handleSheetCloseComplete">
     <div v-if="orderedRevisions.length" class="flex flex-col">
-      <div class="sticky top-0 z-10 bg-surface-white pb-2 pt-1">
+      <div class="sticky top-0 z-10 bg-surface-white pb-3 pt-1">
         <div class="flex items-center justify-center gap-1">
           <button
             v-for="(revision, index) in orderedRevisions"

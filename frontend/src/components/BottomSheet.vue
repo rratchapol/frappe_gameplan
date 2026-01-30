@@ -19,8 +19,13 @@
             :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
           >
             <div>
-              <div ref="handleRef" class="flex touch-none justify-center pb-2 pt-3">
-                <div class="h-1.5 w-10 rounded-full bg-surface-gray-3" />
+              <div class="touch-none" ref="handleRef">
+                <div class="flex justify-center pb-2 pt-3">
+                  <div class="h-1.5 w-10 rounded-full bg-surface-gray-3" />
+                </div>
+                <div class="px-2 pb-3 pt-2 text-center">
+                  <div class="text-xl font-semibold text-ink-gray-9">{{ title }}</div>
+                </div>
               </div>
               <div class="h-[70vh] overflow-y-auto">
                 <slot />
@@ -39,6 +44,7 @@ import { AnimatePresence, Motion } from 'motion-v'
 import { usePointerSwipe, useScrollLock } from '@vueuse/core'
 
 interface Props {
+  title?: string
   modelValue: boolean
 }
 

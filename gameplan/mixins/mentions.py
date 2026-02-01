@@ -5,7 +5,7 @@
 import frappe
 from frappe.utils import get_fullname
 
-from gameplan.utils import extract_mentions
+from gameplan.utils import extract_mentions, extract_rich_quote_authors
 
 
 class HasMentions:
@@ -15,6 +15,7 @@ class HasMentions:
 			return
 
 		mentions = extract_mentions(self.get(mentions_field))
+		notified_users = set()
 		for mention in mentions:
 			# Handle special "everyone" mention
 			if mention.email == "_everyone_":
@@ -22,6 +23,17 @@ class HasMentions:
 				continue
 
 			self._notify_user(mention.email, is_everyone=False)
+			notified_users.add(mention.email)
+		self._notify_rich_quote_authors(mentions_field, notified_users)
+
+	def _notify_rich_quote_authors(self, mentions_field, notified_users):
+		authors = extract_rich_quote_authors(self.get(mentions_field))
+		for author in authors:
+			if author == self.owner:
+				continue
+			if author in notified_users:
+				continue
+			self._notify_user(author, is_everyone=False, notification_type="Rich Quote")
 
 	def _notify_everyone_mention(self):
 		"""Handle @everyone mentions by notifying all relevant users"""
@@ -34,11 +46,12 @@ class HasMentions:
 			# Create notifications for each user
 			self._notify_user(user_email, is_everyone=True)
 
-	def _notify_user(self, user_email, is_everyone=False):
+	def _notify_user(self, user_email, is_everyone=False, notification_type="Mention"):
 		"""Create a notification for a specific user"""
 		values = frappe._dict(
 			from_user=self.owner,
 			to_user=user_email,
+			type=notification_type,
 		)
 
 		if self.doctype == "GP Discussion":
@@ -59,20 +72,21 @@ class HasMentions:
 			return
 
 		notification = frappe.get_doc(doctype="GP Notification")
-
-		if "GP Task" in [self.doctype, self.get("reference_doctype")]:
-			if is_everyone:
-				notification.message = f"{get_fullname(self.owner)} mentioned everyone in a task"
-			else:
-				notification.message = f"{get_fullname(self.owner)} mentioned you in a task"
-		elif "GP Discussion" in [self.doctype, self.get("reference_doctype")]:
-			if is_everyone:
-				notification.message = f"{get_fullname(self.owner)} mentioned everyone in a post"
-			else:
-				notification.message = f"{get_fullname(self.owner)} mentioned you in a post"
-
+		notification.message = self._get_notification_message(is_everyone, notification_type)
 		notification.update(values)
 		notification.insert(ignore_permissions=True)
+
+	def _get_notification_message(self, is_everyone, notification_type):
+		author = get_fullname(self.owner)
+		post_label = "task" if self._is_task_context() else "post"
+		if notification_type == "Rich Quote":
+			return f"{author} quoted you in a {post_label}"
+		if is_everyone:
+			return f"{author} mentioned everyone in a {post_label}"
+		return f"{author} mentioned you in a {post_label}"
+
+	def _is_task_context(self):
+		return "GP Task" in [self.doctype, self.get("reference_doctype")]
 
 	def _get_all_active_gameplan_users(self):
 		"""Get all active Gameplan users except guests"""

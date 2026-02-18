@@ -4,6 +4,7 @@
 import frappe
 from frappe.model.document import Document
 
+import gameplan
 from gameplan.extends.client import check_permissions
 from gameplan.gameplan.doctype.gp_notification.gp_notification import GPNotification
 from gameplan.mixins.activity import HasActivity
@@ -95,3 +96,18 @@ def get_list(
 	data = query.run(as_dict=True, debug=debug)
 	frappe.response["has_next_page"] = len(data) > limit
 	return data[:limit]
+
+
+def get_permission_query_conditions(user):
+	if not user:
+		user = frappe.session.user
+
+	if not gameplan.is_guest(user):
+		return None
+
+	escaped_user = frappe.db.escape(user)
+	return f"""`tabGP Task`.project in (
+		select `tabGP Guest Access`.project
+		from `tabGP Guest Access`
+		where `tabGP Guest Access`.user = {escaped_user}
+	)"""

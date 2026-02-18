@@ -112,10 +112,13 @@ after_install = "gameplan.install.after_install"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
+permission_query_conditions = {
+	"GP Discussion": "gameplan.gameplan.doctype.gp_discussion.gp_discussion.get_permission_query_conditions",
+	"GP Task": "gameplan.gameplan.doctype.gp_task.gp_task.get_permission_query_conditions",
+	"GP Comment": "gameplan.gameplan.doctype.gp_comment.gp_comment.get_permission_query_conditions",
+	"GP Page": "gameplan.gameplan.doctype.gp_page.gp_page.get_permission_query_conditions",
+}
+
 has_permission = {"GP Page": "gameplan.gameplan.doctype.gp_page.gp_page.has_permission"}
 
 # DocType Class

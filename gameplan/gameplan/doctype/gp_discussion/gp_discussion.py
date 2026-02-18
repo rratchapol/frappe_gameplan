@@ -5,6 +5,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cstr
 
+import gameplan
 from gameplan.gameplan.doctype.gp_notification.gp_notification import GPNotification
 from gameplan.gameplan.doctype.gp_unread_record.gp_unread_record import GPUnreadRecord
 from gameplan.mixins.activity import HasActivity
@@ -269,9 +270,7 @@ def move_discussion(discussion, project):
 	# update the discussion counts
 	discussion.update_discussions_count()
 	frappe.get_doc("GP Project", old_project).update_discussions_count()
-	discussion.log_activity(
-		"Discussion Moved", data={"old_project": old_project, "new_project": project}
-	)
+	discussion.log_activity("Discussion Moved", data={"old_project": old_project, "new_project": project})
 	return discussion
 
 
@@ -314,3 +313,18 @@ def move_discussions(discussions: list[dict]):
 		"success_count": len(moved),
 		"failure_count": len(failed),
 	}
+
+
+def get_permission_query_conditions(user):
+	if not user:
+		user = frappe.session.user
+
+	if not gameplan.is_guest(user):
+		return None
+
+	escaped_user = frappe.db.escape(user)
+	return f"""`tabGP Discussion`.project in (
+		select `tabGP Guest Access`.project
+		from `tabGP Guest Access`
+		where `tabGP Guest Access`.user = {escaped_user}
+	)"""

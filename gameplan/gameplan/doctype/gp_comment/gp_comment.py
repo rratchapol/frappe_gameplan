@@ -4,6 +4,7 @@
 import frappe
 from frappe.model.document import Document
 
+import gameplan
 from gameplan.gameplan.doctype.gp_unread_record.gp_unread_record import GPUnreadRecord
 from gameplan.mixins.mentions import HasMentions
 from gameplan.mixins.reactions import HasReactions
@@ -74,3 +75,32 @@ class GPComment(HasMentions, HasReactions, HasTags, Document):
 	@frappe.whitelist()
 	def get_revisions(self, fieldname="content"):
 		return get_document_revisions(self.doctype, self.name, fieldname)
+
+
+def get_permission_query_conditions(user):
+	if not user:
+		user = frappe.session.user
+
+	if not gameplan.is_guest(user):
+		return None
+
+	escaped_user = frappe.db.escape(user)
+	guest_projects_subquery = f"""(
+		select `tabGP Guest Access`.project
+		from `tabGP Guest Access`
+		where `tabGP Guest Access`.user = {escaped_user}
+	)"""
+
+	return f"""(
+		(`tabGP Comment`.reference_doctype = 'GP Discussion' and `tabGP Comment`.reference_name in (
+			select `tabGP Discussion`.name
+			from `tabGP Discussion`
+			where `tabGP Discussion`.project in {guest_projects_subquery}
+		))
+		or
+		(`tabGP Comment`.reference_doctype = 'GP Task' and `tabGP Comment`.reference_name in (
+			select `tabGP Task`.name
+			from `tabGP Task`
+			where `tabGP Task`.project in {guest_projects_subquery}
+		))
+	)"""

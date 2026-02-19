@@ -111,3 +111,15 @@ def get_permission_query_conditions(user):
 		from `tabGP Guest Access`
 		where `tabGP Guest Access`.user = {escaped_user}
 	)"""
+
+
+def has_permission(doc, ptype="read", user=None):
+	user = user or frappe.session.user
+
+	if not gameplan.is_guest(user):
+		return True
+
+	if not doc.project:
+		return False
+
+	return bool(frappe.db.exists("GP Guest Access", {"user": user, "project": doc.project}))

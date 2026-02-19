@@ -104,3 +104,21 @@ def get_permission_query_conditions(user):
 			where `tabGP Task`.project in {guest_projects_subquery}
 		))
 	)"""
+
+
+def has_permission(doc, ptype="read", user=None):
+	user = user or frappe.session.user
+
+	if not gameplan.is_guest(user):
+		return True
+
+	project = None
+	if doc.reference_doctype == "GP Discussion":
+		project = frappe.db.get_value("GP Discussion", doc.reference_name, "project")
+	elif doc.reference_doctype == "GP Task":
+		project = frappe.db.get_value("GP Task", doc.reference_name, "project")
+
+	if not project:
+		return False
+
+	return bool(frappe.db.exists("GP Guest Access", {"user": user, "project": project}))

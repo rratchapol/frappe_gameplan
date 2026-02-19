@@ -119,7 +119,12 @@ permission_query_conditions = {
 	"GP Page": "gameplan.gameplan.doctype.gp_page.gp_page.get_permission_query_conditions",
 }
 
-has_permission = {"GP Page": "gameplan.gameplan.doctype.gp_page.gp_page.has_permission"}
+has_permission = {
+	"GP Discussion": "gameplan.gameplan.doctype.gp_discussion.gp_discussion.has_permission",
+	"GP Task": "gameplan.gameplan.doctype.gp_task.gp_task.has_permission",
+	"GP Comment": "gameplan.gameplan.doctype.gp_comment.gp_comment.has_permission",
+	"GP Page": "gameplan.gameplan.doctype.gp_page.gp_page.has_permission",
+}
 
 # DocType Class
 # ---------------

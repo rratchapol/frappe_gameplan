@@ -13,7 +13,14 @@ class GPPage(Document):
 		self.slug = url_safe_slug(self.title)
 
 
-def has_permission(doc, user, ptype):
+def has_permission(doc, ptype="read", user=None):
+	user = user or frappe.session.user
+
+	if gameplan.is_guest(user):
+		if not doc.project:
+			return doc.owner == user
+		return bool(frappe.db.exists("GP Guest Access", {"user": user, "project": doc.project}))
+
 	if doc.project:
 		# pages in projects accessible by everyone
 		return True

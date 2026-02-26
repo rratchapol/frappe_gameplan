@@ -11,7 +11,7 @@
     <template #editor="{ editor }">
       <DiscussionHeader />
 
-      <div class="mx-auto max-w-3xl px-4 xl:px-0 isolate">
+      <div class="discussion-container isolate">
         <div class="top-12 z-10 sticky">
           <div class="bg-surface-white">
             <div class="flex items-center -ml-2 pt-2 pb-1">

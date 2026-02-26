@@ -1,6 +1,6 @@
 <template>
   <div class="relative flex h-full flex-col" v-if="postId">
-    <div class="body-container">
+    <div class="discussion-container">
       <div v-if="discussion.loading">
         <div class="pb-2 pt-14 flex w-full items-center sticky top-0 z-[1] bg-surface-white">
           <Avatar size="lg" label="A" class="mr-3 animate-pulse shrink-0">

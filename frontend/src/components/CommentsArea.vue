@@ -81,7 +81,7 @@
       ref="addComment"
     >
       <div class="sm:ml-60">
-        <div class="body-container border-t sm:border-t-0 bg-surface-white sm:py-3">
+        <div class="discussion-container border-t sm:border-t-0 bg-surface-white sm:py-3">
           <div v-show="!showCommentBox" class="py-3 sm:py-0">
             <button
               class="flex w-full items-center rounded-lg bg-surface-gray-2 px-2 py-2 text-left text-base text-ink-gray-5 hover:bg-surface-gray-3"

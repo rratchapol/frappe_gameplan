@@ -35,58 +35,76 @@
       </EmptyStateBox>
       <div class="-mx-3" v-else>
         <template v-for="(draft, index) in drafts.data" :key="draft.name">
-          <component
-            :is="isBulkDeleteMode ? 'div' : 'router-link'"
-            class="flex items-center py-2 px-3 group relative h-15 rounded-[10px] transition hover:bg-surface-gray-2 cursor-pointer"
-            :to="
-              !isBulkDeleteMode
-                ? { name: 'NewDiscussion', query: { draft: draft.name } }
-                : undefined
-            "
-            @click="isBulkDeleteMode ? toggleSelection(draft.name) : undefined"
+          <RouterLink
+            :to="{ name: 'NewDiscussion', query: { draft: draft.name } }"
+            custom
+            v-slot="{ href, navigate }"
           >
-            <div
-              v-if="isBulkDeleteMode"
-              class="mr-3 flex items-center"
-              @click.stop="toggleSelection(draft.name)"
+            <a
+              :href="href"
+              class="flex items-center py-2 px-3 group relative h-15 rounded-[10px] transition hover:bg-surface-gray-2 cursor-pointer"
+              @click="handleDraftRowClick($event, navigate, draft.name)"
             >
-              <Checkbox :modelValue="selectedDrafts.includes(draft.name)" />
-            </div>
-            <UserAvatarWithHover :user="draft.owner" size="2xl" />
-            <div class="ml-4 flex-1 min-w-0">
-              <div class="flex items-center min-w-0">
-                <span
-                  class="overflow-hidden text-ellipsis whitespace-nowrap leading-none text-ink-gray-8 text-base font-medium"
-                >
-                  {{ draft.title }}
-                </span>
-              </div>
-              <div class="flex mt-1.5 items-center min-w-0">
-                <div
-                  class="overflow-hidden text-ellipsis whitespace-nowrap text-base inline-flex items-center text-ink-gray-5"
-                >
-                  <div v-if="draft.project_title" class="inline-flex items-center">
-                    <span>{{ draft.project_title }}</span>
-                    <LucideLock
-                      v-if="isSpacePrivate(draft.project)"
-                      class="h-3 w-3 text-ink-gray-6 ml-0.5"
-                    />
-                    <span>:&nbsp;</span>
-                  </div>
-                  <span class="overflow-hidden text-ellipsis whitespace-nowrap">
-                    {{ contentPreview(draft.content) }}
+              <motion.div
+                class="flex shrink-0 items-center overflow-hidden"
+                :animate="{ width: isBulkDeleteMode ? 32 : 0 }"
+                :transition="{ type: 'spring', stiffness: 700, damping: 48, mass: 0.5 }"
+              >
+                <AnimatePresence>
+                  <motion.div
+                    v-if="isBulkDeleteMode"
+                    class="flex items-center"
+                    role="checkbox"
+                    :aria-checked="selectedDrafts.includes(draft.name)"
+                    tabindex="0"
+                    :initial="{ scale: 0 }"
+                    :animate="{ scale: 1 }"
+                    :exit="{ scale: 0 }"
+                    :transition="{ duration: 0.08, ease: 'easeOut' }"
+                    @click.stop="toggleSelection(draft.name)"
+                    @keydown.enter.prevent="toggleSelection(draft.name)"
+                    @keydown.space.prevent="toggleSelection(draft.name)"
+                  >
+                    <Checkbox :modelValue="selectedDrafts.includes(draft.name)" />
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
+              <UserAvatarWithHover :user="draft.owner" size="2xl" />
+              <div class="ml-4 flex-1 min-w-0">
+                <div class="flex items-center min-w-0">
+                  <span
+                    class="overflow-hidden text-ellipsis whitespace-nowrap text-ink-gray-8 text-base font-medium"
+                  >
+                    {{ draft.title }}
                   </span>
                 </div>
-              </div>
-            </div>
-            <div class="ml-auto shrink-0">
-              <Tooltip :text="dayjsLocal(draft.modified).format('D MMM YYYY [at] h:mm A')">
-                <div class="shrink-0 whitespace-nowrap text-sm text-ink-gray-5 text-right">
-                  {{ relativeTimestamp(draft.modified) }}
+                <div class="flex mt-1.5 items-center min-w-0">
+                  <div
+                    class="overflow-hidden text-ellipsis whitespace-nowrap text-base inline-flex items-center text-ink-gray-5"
+                  >
+                    <div v-if="draft.project_title" class="inline-flex items-center">
+                      <span>{{ draft.project_title }}</span>
+                      <LucideLock
+                        v-if="isSpacePrivate(draft.project)"
+                        class="h-3 w-3 text-ink-gray-6 ml-0.5"
+                      />
+                      <span>:&nbsp;</span>
+                    </div>
+                    <span class="overflow-hidden text-ellipsis whitespace-nowrap">
+                      {{ contentPreview(draft.content) }}
+                    </span>
+                  </div>
                 </div>
-              </Tooltip>
-            </div>
-          </component>
+              </div>
+              <div class="ml-auto shrink-0">
+                <Tooltip :text="dayjsLocal(draft.modified).format('D MMM YYYY [at] h:mm A')">
+                  <div class="shrink-0 whitespace-nowrap text-sm text-ink-gray-5 text-right">
+                    {{ relativeTimestamp(draft.modified) }}
+                  </div>
+                </Tooltip>
+              </div>
+            </a>
+          </RouterLink>
           <div
             class="mx-3 h-px border-t border-outline-gray-modals transition-opacity group-hover:opacity-0"
             v-if="index < (drafts.data?.length || 0) - 1"
@@ -130,6 +148,7 @@ import { useSpace } from '@/data/spaces'
 import { relativeTimestamp } from '@/utils'
 import PageHeader from '@/components/PageHeader.vue'
 import { ref } from 'vue'
+import { motion, AnimatePresence } from 'motion-v'
 import DropdownMoreOptions from '@/components/DropdownMoreOptions.vue'
 
 interface Draft extends GPDraft {
@@ -159,6 +178,19 @@ function toggleSelection(name: string) {
 function cancelBulkDelete() {
   isBulkDeleteMode.value = false
   selectedDrafts.value = []
+}
+
+function handleDraftRowClick(
+  event: MouseEvent,
+  navigate: (event?: MouseEvent) => void,
+  draftName: string,
+) {
+  if (isBulkDeleteMode.value) {
+    event.preventDefault()
+    toggleSelection(draftName)
+    return
+  }
+  navigate(event)
 }
 
 let deleteDraftsCall = useCall<DeleteDraftsResponse, { names: string[] }>({

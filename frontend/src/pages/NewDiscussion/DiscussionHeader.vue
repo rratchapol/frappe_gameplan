@@ -10,8 +10,9 @@
         },
       ]"
     />
-    <div class="hidden shrink-0 space-x-2 sm:flex">
+    <div class="flex shrink-0 space-x-2">
       <DropdownMoreOptions
+        class="hidden sm:block"
         :options="[
           {
             label: 'Delete',

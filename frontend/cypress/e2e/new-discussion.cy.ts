@@ -74,4 +74,13 @@ describe('New Discussion - Draft Functionality', () => {
     cy.visit('/g/drafts')
     cy.contains('My Draft Discussion').should('not.exist')
   })
+
+  it('should show publish button on mobile new discussion page', () => {
+    cy.viewport('iphone-6')
+    cy.visit('/g/drafts')
+    cy.button('Add new').click()
+
+    cy.contains('New Discussion').should('exist')
+    cy.button('Publish').should('be.visible')
+  })
 })

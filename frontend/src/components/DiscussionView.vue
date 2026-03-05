@@ -445,6 +445,17 @@ const actions = computed(() => [
     onClick: copyLink,
   },
   {
+    label: 'Mark as unread',
+    icon: 'mail',
+    onClick: () => {
+      discussion.markAsUnread.submit().then(() => {
+        if (discussion.doc?.project) {
+          refreshUnreadCountForProjects([discussion.doc.project])
+        }
+      })
+    },
+  },
+  {
     label: 'Bookmark',
     icon: 'bookmark',
     onClick: () => discussion.addBookmark.submit(),

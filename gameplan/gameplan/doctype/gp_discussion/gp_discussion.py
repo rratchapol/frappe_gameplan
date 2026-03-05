@@ -126,6 +126,13 @@ class GPDiscussion(HasActivity, HasMentions, HasReactions, HasTags, Document):
 		GPNotification.clear_notifications(discussion=self.name)
 
 	@frappe.whitelist()
+	def mark_as_unread(self):
+		if frappe.flags.read_only:
+			return
+
+		GPUnreadRecord.mark_discussion_as_unread_for_user(self.name, frappe.session.user)
+
+	@frappe.whitelist()
 	def get_revisions(self, fieldname="content"):
 		return get_document_revisions(self.doctype, self.name, fieldname)
 

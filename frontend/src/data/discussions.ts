@@ -41,6 +41,7 @@ export function useDiscussion(discussionId: MaybeRefOrGetter<string>) {
 
   interface DiscussionMethods {
     trackVisit: () => void
+    markAsUnread: () => void
     closeDiscussion: () => void
     reopenDiscussion: () => void
     pinDiscussion: (data: { pin_scope: 'Global' | 'Space' }) => void
@@ -57,6 +58,7 @@ export function useDiscussion(discussionId: MaybeRefOrGetter<string>) {
       name: discussionId,
       methods: {
         trackVisit: 'track_visit',
+        markAsUnread: 'mark_as_unread',
         closeDiscussion: 'close_discussion',
         reopenDiscussion: 'reopen_discussion',
         pinDiscussion: 'pin_discussion',

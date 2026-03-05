@@ -111,6 +111,44 @@ class GPUnreadRecord(Document):
 		return query.run(as_dict=1)
 
 	@staticmethod
+	def mark_discussion_as_unread_for_user(discussion, user):
+		"""Mark a discussion unread for a user by restoring the discussion-level unread record."""
+		discussion_level_record = frappe.db.get_value(
+			"GP Unread Record",
+			{
+				"user": user,
+				"discussion": discussion,
+				"comment": ["is", "not set"],
+			},
+			"name",
+		)
+
+		if discussion_level_record:
+			frappe.db.set_value(
+				"GP Unread Record", discussion_level_record, "is_unread", 1, update_modified=False
+			)
+			return discussion_level_record
+
+		project = frappe.db.get_value("GP Discussion", discussion, "project")
+		if not project:
+			return
+
+		return (
+			frappe.get_doc(
+				{
+					"doctype": "GP Unread Record",
+					"user": user,
+					"discussion": discussion,
+					"project": project,
+					"comment": None,
+					"is_unread": 1,
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
+
+	@staticmethod
 	def mark_all_as_read_for_project(project, user):
 		"""Mark all discussions in project as read for user"""
 

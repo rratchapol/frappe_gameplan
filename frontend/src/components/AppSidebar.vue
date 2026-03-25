@@ -196,6 +196,7 @@ import LucidePencilLine from '~icons/lucide/pencil-line'
 import LucidePieChart from '~icons/lucide/pie-chart'
 import LucideShield from '~icons/lucide/shield'
 import LucideBarChart2 from '~icons/lucide/bar-chart-2'
+import LucideClipboardList from '~icons/lucide/clipboard-list'
 
 const showAddTeamDialog = ref(false)
 const showHomePageSettingsDialog = ref(false)
@@ -262,6 +263,24 @@ const navigation = computed(() => {
       isActive: testRoute(/^PersonalDashboard$/),
     },
     {
+      name: 'Workload',
+      icon: LucideBarChart2,
+      route: {
+        name: 'WorkloadView',
+      },
+      isActive: testRoute(/^WorkloadView$/),
+      condition: () => sessionUser.isNotGuest,
+    },
+    {
+      name: 'Reports',
+      icon: LucideClipboardList,
+      route: {
+        name: 'ReportingPage',
+      },
+      isActive: testRoute(/^ReportingPage$/),
+      condition: () => sessionUser.isNotGuest,
+    },
+    {
       name: 'Discussions',
       icon: LucideNewspaper,
       route: {
@@ -277,7 +296,7 @@ const navigation = computed(() => {
       route: {
         name: 'MyPages',
       },
-      isActive: testRoute(/MyPages|Page/g),
+      isActive: testRoute(/^MyPages$|^Page$/),
     },
     {
       name: 'Drafts',
@@ -321,15 +340,6 @@ const navigation = computed(() => {
         name: 'MyTasks',
       },
       isActive: testRoute(/MyTasks|Task/g),
-    },
-    {
-      name: 'Workload',
-      icon: LucideBarChart2,
-      route: {
-        name: 'WorkloadView',
-      },
-      isActive: testRoute(/^WorkloadView$/),
-      condition: () => sessionUser.isNotGuest,
     },
     {
       name: 'People',

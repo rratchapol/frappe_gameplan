@@ -32,6 +32,21 @@
             format="D MMM, YYYY"
           />
           <FormControl
+            type="select"
+            v-model="newTask.doc.task_type"
+            placeholder="Task Type"
+            :options="[
+              { label: '— None —', value: '' },
+              { label: 'Bug', value: 'Bug' },
+              { label: 'Story', value: 'Story' },
+              { label: 'Implementation', value: 'Implementation' },
+              { label: 'Issue', value: 'Issue' },
+              { label: 'Request', value: 'Request' },
+              { label: 'Approval', value: 'Approval' },
+              { label: 'Operational', value: 'Operational' },
+            ]"
+          />
+          <FormControl
             type="number"
             v-model="newTask.doc.points"
             placeholder="Point Score"

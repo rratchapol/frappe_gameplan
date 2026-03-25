@@ -184,6 +184,23 @@
             placement="end"
           />
         </div>
+        <div>Task Type</div>
+        <div>
+          <select
+            class="w-full rounded-md border py-1.5 px-2 text-sm focus:border-gray-500 focus:outline-none bg-white text-ink-gray-8"
+            :value="task.doc.task_type || ''"
+            @change="task.setValue.submit({ task_type: ($event.target as HTMLSelectElement).value })"
+          >
+            <option value="">— None —</option>
+            <option>Bug</option>
+            <option>Story</option>
+            <option>Implementation</option>
+            <option>Issue</option>
+            <option>Request</option>
+            <option>Approval</option>
+            <option>Operational</option>
+          </select>
+        </div>
         <div>Sprint</div>
         <div>
           <select 

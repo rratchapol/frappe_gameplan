@@ -296,7 +296,7 @@ const navigation = computed(() => {
       isActive: testRoute(/Notifications/g),
     },
     {
-      name: 'Teams',
+      name: 'Projects',
       icon: LucideUsers2,
       route: {
         name: 'Teams',

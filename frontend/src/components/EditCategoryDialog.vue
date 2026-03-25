@@ -1,5 +1,5 @@
 <template>
-  <Dialog :options="{ title: 'Change category title' }" v-model="show">
+  <Dialog :options="{ title: 'Change project title' }" v-model="show">
     <template #body-content>
       <FormControl label="Title" v-model="categoryTitle" v-focus:autoselect />
     </template>

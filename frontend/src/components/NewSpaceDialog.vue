@@ -28,14 +28,14 @@
           <div class="size-7 shrink-0"></div>
           <div class="w-full">
             <Combobox
-              placeholder="Category"
+              placeholder="Project"
               :options="categoryOptions"
               v-model="selectedCategory"
               :open-on-focus="true"
             >
               <template #create-new="{ searchTerm }">
                 <LucidePlus class="h-4 w-4 mr-2" />
-                <span> Add New Category: "{{ searchTerm }}" </span>
+                <span> Add New Project: "{{ searchTerm }}" </span>
               </template>
             </Combobox>
           </div>

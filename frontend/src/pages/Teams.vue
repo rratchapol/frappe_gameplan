@@ -2,10 +2,10 @@
   <div class="pb-10">
     <header class="sticky top-0 z-10 border-b bg-surface-white px-4 py-2.5 sm:px-5">
       <div class="flex items-center justify-between">
-        <Breadcrumbs :items="[{ label: 'Teams', route: { name: 'Teams' } }]" />
+        <Breadcrumbs :items="[{ label: 'Projects', route: { name: 'Teams' } }]" />
         <Button variant="solid" @click="showNewTeamDialog = true">
           <template #prefix><LucidePlus class="h-4 w-4" /></template>
-          New Team
+          New Project
         </Button>
       </div>
     </header>
@@ -13,10 +13,10 @@
     <!-- No teams state -->
     <div v-if="activeTeams.length === 0" class="flex flex-col items-center justify-center py-24 text-ink-gray-4">
       <LucideUsers2 class="mb-4 h-12 w-12" />
-      <p class="text-lg font-medium">No Teams yet</p>
-      <p class="mt-1 text-sm">Create a team to group your Spaces together</p>
+      <p class="text-lg font-medium">No Projects yet</p>
+      <p class="mt-1 text-sm">Create a project to group your Spaces together</p>
       <Button class="mt-4" variant="solid" @click="showNewTeamDialog = true">
-        Create your first Team
+        Create your first Project
       </Button>
     </div>
 
@@ -38,13 +38,13 @@
     </div>
 
     <!-- New Team Dialog -->
-    <Dialog v-model="showNewTeamDialog" :options="{ title: 'New Team' }">
+    <Dialog v-model="showNewTeamDialog" :options="{ title: 'New Project' }">
       <template #body-content>
         <div class="space-y-3">
           <FormControl
             v-model="newTeamTitle"
             type="text"
-            label="Team Name"
+            label="Project Name"
             placeholder="e.g. Engineering, Marketing"
             autofocus
             @keydown.enter="createTeam"
@@ -53,7 +53,7 @@
       </template>
       <template #actions>
         <Button variant="solid" :loading="isCreating" @click="createTeam">
-          Create Team
+          Create Project
         </Button>
       </template>
     </Dialog>

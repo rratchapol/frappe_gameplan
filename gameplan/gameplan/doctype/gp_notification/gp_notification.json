@@ -37,7 +37,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Type",
-   "options": "Mention\nReaction\nRich Quote",
+   "options": "Mention\nReaction\nRich Quote\nAssignment\nReassignment\nDue Soon\nOverdue\nBlocked\nSLA Breach",
    "reqd": 1
   },
   {

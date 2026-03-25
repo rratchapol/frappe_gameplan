@@ -88,7 +88,17 @@
       <Dialog :options="{ title: 'Create project' }" v-model="createNewProjectDialog">
         <template #body-content>
           <div class="space-y-5">
-            <FormControl label="Title" v-model="newProject.title" @keydown.enter="createProject" />
+            <div class="flex items-center gap-2">
+              <IconPicker v-model="newProject.icon">
+                <Button>
+                  <template #icon>
+                    <span v-if="newProject.icon">{{ newProject.icon }}</span>
+                    <LucidePlus v-else class="h-4 w-4" />
+                  </template>
+                </Button>
+              </IconPicker>
+              <FormControl class="flex-1" placeholder="Title" v-model="newProject.title" @keydown.enter="createProject" />
+            </div>
             <FormControl
               v-if="!team.doc.is_private"
               type="select"
@@ -115,11 +125,16 @@
         </template>
       </Dialog>
     </div>
+
+    <TeamTasksList :teamId="team.doc.name" />
   </div>
 </template>
 <script>
 import { Dialog, FormControl, TextInput, TabButtons, dayjsLocal } from 'frappe-ui'
 import { projects, getTeamProjects, getTeamArchivedProjects } from '@/data/projects'
+import { spaces } from '@/data/spaces'
+import TeamTasksList from '@/components/TeamTasksList.vue'
+import IconPicker from '@/components/IconPicker.vue'
 
 export default {
   name: 'TeamOverview',
@@ -129,6 +144,8 @@ export default {
     TabButtons,
     TextInput,
     FormControl,
+    TeamTasksList,
+    IconPicker,
   },
   setup() {
     return {
@@ -138,7 +155,7 @@ export default {
   data() {
     return {
       createNewProjectDialog: false,
-      newProject: { title: '', is_private: 0 },
+      newProject: { title: '', icon: '', is_private: 0 },
       activeTab: 'Active',
     }
   },
@@ -169,6 +186,7 @@ export default {
         {
           onSuccess: (project) => {
             projects.reload()
+            spaces.reload()
             this.newProject = this.$options.data().newProject
             this.createNewProjectDialog = false
             this.$router.push({

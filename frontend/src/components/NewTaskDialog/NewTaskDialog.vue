@@ -31,6 +31,13 @@
             placeholder="Set due date"
             format="D MMM, YYYY"
           />
+          <FormControl
+            type="number"
+            v-model="newTask.doc.points"
+            placeholder="Point Score"
+            min="0"
+            @keydown.enter="onCreateClick"
+          />
           <Combobox
             placeholder="Select space"
             :options="spaceOptions"
@@ -88,7 +95,7 @@ function statusOptions() {
 }
 
 const assignableUsers = computed(() => {
-  return activeUsers.value.map((user) => ({
+  return activeUsers.value.map((user: any) => ({
     label: user.full_name,
     value: user.name,
   }))
@@ -105,7 +112,7 @@ function onCreateClick(e: KeyboardEvent) {
     return
   }
 
-  return newTask.value.submit().then((doc) => {
+  return newTask.value.submit().then((doc : any) => {
     showDialog.value = false
     _onSuccess.value(doc)
   })
@@ -118,7 +125,7 @@ let disableOutsideClickToClose = computed(() => {
 watch(showDialog, (val) => {
   if (val) {
     setTimeout(() => {
-      titleInput.value.$el?.querySelector('input')?.focus()
+      titleInput?.value?.$el?.querySelector('input')?.focus()
     }, 100)
   }
 })

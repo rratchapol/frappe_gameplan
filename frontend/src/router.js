@@ -31,6 +31,17 @@ let router = createRouter({
       },
     },
     {
+      path: '/dashboard',
+      name: 'Dashboard',
+      component: () => import('@/pages/Dashboard.vue'),
+    },
+    {
+      path: '/dashboard/personal',
+      name: 'PersonalDashboard',
+      component: () => import('@/pages/Dashboard.vue'),
+      props: { personal: true }
+    },
+    {
       name: 'Discussions',
       path: '/discussions',
       component: () => import('@/pages/Discussions.vue'),
@@ -73,6 +84,11 @@ let router = createRouter({
       path: '/people',
       name: 'People',
       component: () => import('@/pages/People.vue'),
+    },
+    {
+      path: '/roles',
+      name: 'Roles',
+      component: () => import('@/pages/RolesPage.vue'),
     },
     {
       path: '/search',
@@ -142,6 +158,12 @@ let router = createRouter({
           component: () => import('@/pages/Task.vue'),
           props: true,
           meta: { hideHeader: true },
+        },
+        {
+          name: 'SpaceSprints',
+          path: 'sprints',
+          component: () => import('@/pages/SpaceSprints.vue'),
+          props: true,
         },
       ],
     },

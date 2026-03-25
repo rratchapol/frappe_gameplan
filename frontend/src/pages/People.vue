@@ -26,6 +26,9 @@
                 :options="[
                   { label: 'Name', value: 'full_name asc' },
                   { label: 'Last updated', value: 'modified desc' },
+                  { label: 'Points', value: 'points' },
+                  { label: 'System Role', value: 'role' },
+                  { label: 'Custom Role', value: 'gp_role' },
                   { label: 'Posts', value: 'posts' },
                   { label: 'Replies', value: 'replies' },
                 ]"
@@ -66,14 +69,21 @@
                 class="flex sm:rounded px-3 py-2 sm:h-15 sm:hover:bg-surface-gray-2 duration-150 active:bg-surface-gray-2 transition-colors"
                 exact-active-class="!bg-surface-gray-2"
               >
-                <div class="flex w-full sm:w-3/5 items-center">
+                <div class="flex w-full sm:w-1/2 items-center">
                   <UserAvatarWithHover :user="user.user" size="2xl" />
                   <div class="ml-3 min-w-0">
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                       <div class="text-base font-medium text-ink-gray-8">
                         {{ $user(user.user).full_name }}
                       </div>
-                      <Badge v-if="$user(user.user).isGuest">Guest</Badge>
+                      <!-- <Badge v-if="user.role === 'Gameplan Admin'" theme="orange">Admin</Badge>
+                      <Badge v-else-if="user.role !== 'Gameplan Admin'">Member</Badge> -->
+                      <span
+                        v-if="user.gp_role_title"
+                        class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-ink-gray-7 border border-outline-gray-2"
+                      >
+                        {{ user.gp_role_title }}
+                      </span>
                     </div>
                     <div
                       v-if="user.bio"
@@ -87,12 +97,17 @@
                       <span>{{ user.discussions_count }} posts</span>
                       <span class="text-ink-gray-4">&middot;</span>
                       <span>{{ user.comments_count }} replies</span>
+                      <template v-if="user.points">
+                        <span class="text-ink-gray-4">&middot;</span>
+                        <span>{{ user.points }} pts</span>
+                      </template>
                     </div>
                   </div>
                 </div>
-                <div class="hidden sm:flex w-1/5 items-center justify-end text-right">
+                <div class="hidden sm:flex ml-auto items-center gap-6 text-base text-ink-gray-5">
+                  <span class="w-24 text-right">{{ roleLabel(user.role) }}</span>
                   <router-link
-                    class="text-base text-ink-gray-5 hover:text-ink-gray-8"
+                    class="w-20 text-right hover:text-ink-gray-8"
                     :to="{
                       name: 'PersonProfilePosts',
                       params: { personId: user.name },
@@ -101,12 +116,8 @@
                   >
                     {{ user.discussions_count }} posts
                   </router-link>
-                </div>
-                <div
-                  class="hidden sm:flex w-1/5 items-center justify-end text-right text-base text-ink-gray-5"
-                >
                   <router-link
-                    class="text-base text-ink-gray-5 hover:text-ink-gray-8"
+                    class="w-24 text-right hover:text-ink-gray-8"
                     :to="{
                       name: 'PersonProfileReplies',
                       params: { personId: user.name },
@@ -115,6 +126,10 @@
                   >
                     {{ user.comments_count }} replies
                   </router-link>
+                  <div class="w-16 text-right">
+                    <span class="font-medium text-ink-gray-7">{{ user.points || 0 }}</span>
+                    <span class="ml-1 text-ink-gray-4">pts</span>
+                  </div>
                 </div>
               </router-link>
               <div class="mx-2 border-b"></div>
@@ -157,7 +172,7 @@ export default {
   resources: {
     profiles() {
       let orderBy = this.orderBy
-      if (['posts', 'replies'].includes(orderBy)) {
+      if (['posts', 'replies', 'points', 'role', 'gp_role'].includes(orderBy)) {
         orderBy = 'modified desc'
       }
       return {
@@ -166,7 +181,7 @@ export default {
         cache: ['People', orderBy],
         doctype: 'GP User Profile',
         filters: { enabled: 1 },
-        fields: ['name', 'user', 'bio', 'modified', 'cover_image', 'cover_image_position'],
+        fields: ['name', 'user', 'bio', 'modified', 'cover_image', 'cover_image_position', 'gp_role'],
         pageLength: 999,
         orderBy: this.orderBy,
         auto: true,
@@ -192,6 +207,13 @@ export default {
         list = list.sort((a, b) => b.discussions_count - a.discussions_count)
       } else if (this.orderBy == 'replies') {
         list = list.sort((a, b) => b.comments_count - a.comments_count)
+      } else if (this.orderBy == 'points') {
+        list = list.sort((a, b) => (b.points || 0) - (a.points || 0))
+      } else if (this.orderBy == 'role') {
+        const roleOrder = { 'Gameplan Admin': 0, 'Gameplan Member': 1, 'Gameplan Guest': 2 }
+        list = list.sort((a, b) => (roleOrder[a.role] ?? 1) - (roleOrder[b.role] ?? 1))
+      } else if (this.orderBy == 'gp_role') {
+        list = list.sort((a, b) => (a.gp_role_title || 'zzz').localeCompare(b.gp_role_title || 'zzz'))
       }
       return list
     },
@@ -201,11 +223,18 @@ export default {
           ...profile,
           email: this.$user(profile.user).email,
           full_name: this.$user(profile.user).full_name,
+          role: this.$user(profile.user).role,
+          gp_role: profile.gp_role || '',
+          gp_role_title: profile.gp_role_title || '',
         }
       })
     },
   },
   methods: {
+    roleLabel(role) {
+      const map = { 'Gameplan Admin': 'Admin', 'Gameplan Member': 'Member', 'Gameplan Guest': 'Guest' }
+      return map[role] || role
+    },
     coverImageUrl(url) {
       if (!url) return null
       if (url.startsWith('https://images.unsplash.com')) {

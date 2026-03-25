@@ -1,8 +1,14 @@
 {
   "extends": "frappe-ui/tsconfig.base.json",
   "compilerOptions": {
+    "moduleResolution": "bundler",
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "types": [],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "frappe-ui": ["../frappe-ui/src/index.ts"],
+      "frappe-ui/*": ["../frappe-ui/src/*"]
     }
   },
   "include": ["./src/**/*", "vite/client", "./vite.config.ts", "./vite-helpers.ts"],

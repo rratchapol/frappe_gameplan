@@ -109,6 +109,15 @@
             <FormControl label="First Name" v-model="user.first_name" />
             <FormControl label="Last Name" v-model="user.last_name" />
             <FormControl label="Bio" v-model="profile.bio" type="textarea" maxlength="280" />
+            <FormControl
+              label="Role"
+              type="select"
+              :options="[
+                { label: '— None —', value: '' },
+                ...($resources.gpRoles.data || []).map((r) => ({ label: r.title, value: r.name })),
+              ]"
+              v-model="profile.gp_role"
+            />
           </template>
         </div>
       </template>
@@ -183,6 +192,15 @@ export default {
         realtime: true,
       }
     },
+    gpRoles() {
+      return {
+        type: 'list',
+        doctype: 'GP Role',
+        fields: ['name', 'title'],
+        limit: 999,
+        auto: true,
+      }
+    },
   },
   computed: {
     profile() {
@@ -226,6 +244,7 @@ export default {
         .then(() => {
           this.$resources.profile.setValue.submit({
             bio: this.profile.bio,
+            gp_role: this.profile.gp_role || '',
           })
           this.editDialog.show = false
         })

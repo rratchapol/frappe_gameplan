@@ -1,6 +1,12 @@
 // defining global components and properties here for autocompletion
 // https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features
 
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
 import { isSessionUser } from './data/session'
 import { useUser } from './data/users'
 import { getPlatform } from './utils'

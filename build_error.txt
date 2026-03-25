@@ -1,0 +1,15 @@
+yarn run v1.22.22
+warning package.json: No license field
+$ vite build
+failed to load config from /home/frappe/frappe-bench/apps/gameplan/frontend/vite.config.ts
+error during build:
+Error: EACCES: permission denied, open '/home/frappe/frappe-bench/apps/gameplan/frontend/vite.config.ts.timestamp-1774343300596-5a1c9078e9d408.mjs'
+    at async open (node:internal/fs/promises:637:25)
+    at async Object.writeFile (node:internal/fs/promises:1239:14)
+    at async loadConfigFromBundledFile (file:///home/frappe/frappe-bench/apps/gameplan/frontend/node_modules/.pnpm/vite@4.5.14_@types+node@20.19.4/node_modules/vite/dist/node/chunks/dep-827b23df.js:66655:9)
+    at async loadConfigFromFile (file:///home/frappe/frappe-bench/apps/gameplan/frontend/node_modules/.pnpm/vite@4.5.14_@types+node@20.19.4/node_modules/vite/dist/node/chunks/dep-827b23df.js:66506:28)
+    at async resolveConfig (file:///home/frappe/frappe-bench/apps/gameplan/frontend/node_modules/.pnpm/vite@4.5.14_@types+node@20.19.4/node_modules/vite/dist/node/chunks/dep-827b23df.js:66096:28)
+    at async build (file:///home/frappe/frappe-bench/apps/gameplan/frontend/node_modules/.pnpm/vite@4.5.14_@types+node@20.19.4/node_modules/vite/dist/node/chunks/dep-827b23df.js:47982:20)
+    at async CAC.<anonymous> (file:///home/frappe/frappe-bench/apps/gameplan/frontend/node_modules/.pnpm/vite@4.5.14_@types+node@20.19.4/node_modules/vite/dist/node/cli.js:843:9)
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

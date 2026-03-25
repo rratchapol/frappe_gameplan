@@ -8,8 +8,8 @@
  "field_order": [
   "title",
   "icon",
-  "column_break_2",
   "team",
+  "default_sla_rule",
   "is_private",
   "section_break_5",
   "description",
@@ -43,6 +43,13 @@
    "in_standard_filter": 1,
    "label": "Team",
    "options": "GP Team"
+  },
+  {
+   "fieldname": "default_sla_rule",
+   "fieldtype": "Link",
+   "label": "Default SLA Rule",
+   "options": "GP SLA Rule",
+   "description": "Default SLA tracking for all tasks created under this specific project."
   },
   {
    "fieldname": "members",

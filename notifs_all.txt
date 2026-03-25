@@ -1,0 +1,2 @@
+Total unread: 1
+{'name': 1, 'creation': datetime.datetime(2026, 3, 24, 9, 2, 52, 825674), 'modified': datetime.datetime(2026, 3, 24, 9, 2, 52, 825674), 'modified_by': 'Administrator', 'owner': 'Administrator', 'docstatus': 0, 'idx': 0, 'from_user': 'Administrator', 'to_user': 'Administrator', 'type': 'Assignment', 'message': 'debug test assignment notification', 'comment': None, 'discussion': None, 'task': None, 'project': None, 'team': None, 'read': 0, '_user_tags': None, '_comments': None, '_assign': None, '_liked_by': None}

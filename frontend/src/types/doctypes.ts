@@ -43,6 +43,8 @@ export interface GPTask extends DocType {
   completed_by?: string
   /** Comments Count: Int */
   comments_count?: number
+  /** Points: Int */
+  points?: number
 }
 
 // Last updated: 2023-01-16 13:19:48.202430

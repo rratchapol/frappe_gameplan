@@ -160,6 +160,7 @@
   <HomePageSettingsDialog v-model="showHomePageSettingsDialog" />
 </template>
 <script setup lang="ts">
+console.log('AppSidebar loading version 2...')
 import { computed, ref, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Dropdown } from 'frappe-ui'
@@ -192,6 +193,8 @@ import LucideUnfoldVertical from '~icons/lucide/unfold-vertical'
 import LucideFoldVertical from '~icons/lucide/fold-vertical'
 import LucideMoreHorizontal from '~icons/lucide/more-horizontal'
 import LucidePencilLine from '~icons/lucide/pencil-line'
+import LucidePieChart from '~icons/lucide/pie-chart'
+import LucideShield from '~icons/lucide/shield'
 
 const showAddTeamDialog = ref(false)
 const showHomePageSettingsDialog = ref(false)
@@ -241,13 +244,21 @@ function toggleAllGroups() {
 const navigation = computed(() => {
   return [
     {
-      name: 'Spaces',
-      icon: LucideLayoutGrid,
+      name: 'Dashboard',
+      icon: LucidePieChart,
       route: {
-        name: 'Spaces',
+        name: 'Dashboard',
       },
-      isActive: testRoute(/Spaces/g),
-      condition: () => preferredHomePage.value == 'Discussions',
+      isActive: testRoute(/^Dashboard$/),
+      condition: () => sessionUser.isNotGuest,
+    },
+    {
+      name: 'Personal Dashboard',
+      icon: LucidePieChart,
+      route: {
+        name: 'PersonalDashboard',
+      },
+      isActive: testRoute(/^PersonalDashboard$/),
     },
     {
       name: 'Discussions',
@@ -260,13 +271,12 @@ const navigation = computed(() => {
       condition: () => preferredHomePage.value == 'Spaces',
     },
     {
-      name: 'Inbox',
-      icon: LucideInbox,
+      name: 'Pages',
+      icon: LucideFiles,
       route: {
-        name: 'Notifications',
+        name: 'MyPages',
       },
-      count: unreadNotifications.data || 0,
-      isActive: testRoute(/Notifications/g),
+      isActive: testRoute(/MyPages|Page/g),
     },
     {
       name: 'Drafts',
@@ -277,20 +287,39 @@ const navigation = computed(() => {
       isActive: testRoute(/Drafts/g),
     },
     {
+      name: 'Inbox',
+      icon: LucideInbox,
+      route: {
+        name: 'Notifications',
+      },
+      count: unreadNotifications.data || 0,
+      isActive: testRoute(/Notifications/g),
+    },
+    {
+      name: 'Teams',
+      icon: LucideUsers2,
+      route: {
+        name: 'Teams',
+      },
+      isActive: testRoute(/Teams|Team/g),
+      condition: () => sessionUser.isNotGuest,
+    },
+    {
+      name: 'Spaces',
+      icon: LucideLayoutGrid,
+      route: {
+        name: 'Spaces',
+      },
+      isActive: testRoute(/Spaces/g),
+      condition: () => preferredHomePage.value == 'Discussions',
+    },
+    {
       name: 'Tasks',
       icon: LucideListTodo,
       route: {
         name: 'MyTasks',
       },
       isActive: testRoute(/MyTasks|Task/g),
-    },
-    {
-      name: 'Pages',
-      icon: LucideFiles,
-      route: {
-        name: 'MyPages',
-      },
-      isActive: testRoute(/MyPages|Page/g),
     },
     {
       name: 'People',
@@ -300,6 +329,15 @@ const navigation = computed(() => {
       },
       isActive: testRoute(/People|PersonProfile/g),
       condition: () => sessionUser.isNotGuest,
+    },
+    {
+      name: 'Roles',
+      icon: LucideShield,
+      route: {
+        name: 'Roles',
+      },
+      isActive: testRoute(/^Roles$/),
+      condition: () => sessionUser.role === 'Gameplan Admin',
     },
     {
       name: 'Search',

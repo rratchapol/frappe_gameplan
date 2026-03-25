@@ -6,7 +6,7 @@ from time import sleep
 import frappe
 from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
-from frappe.query_builder.functions import Count
+from frappe.query_builder.functions import Count, Sum
 from frappe.website.utils import cleanup_page_name
 from rq.job import JobStatus
 
@@ -140,9 +140,23 @@ def get_list(
 	).run(as_dict=True)
 	comments_by_user = {d.owner: d.count for d in comments_count}
 
+	Task = frappe.qb.DocType("GP Task")
+	points_data = (
+		frappe.qb.from_(Task)
+		.select(Sum(Task.points).as_("total_points"), Task.assigned_to)
+		.where(Task.assigned_to.isin(users) & (Task.status == "Done"))
+		.groupby(Task.assigned_to)
+	).run(as_dict=True)
+	points_by_user = {d.assigned_to: int(d.total_points or 0) for d in points_data}
+
 	for user in data:
 		user.discussions_count = discussions_by_user.get(user.user, 0)
 		user.comments_count = comments_by_user.get(user.user, 0)
+		user.points = points_by_user.get(user.user, 0)
+		if user.get("gp_role"):
+			user.gp_role_title = frappe.db.get_value("GP Role", user.gp_role, "title") or ""
+		else:
+			user.gp_role_title = ""
 
 	return data
 

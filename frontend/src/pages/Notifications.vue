@@ -20,8 +20,23 @@
       <div class="flex items-center justify-between py-2" v-for="d in notifications" :key="d.name">
         <div class="flex items-start space-x-2">
           <UserAvatar size="sm" :user="d.from_user" v-if="d.from_user" />
-          <div class="grid h-5 w-5 place-items-center" v-if="d.type === 'Reaction'">
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Reaction'">
             <LucideHeart class="h-4 w-4 text-ink-gray-6" />
+          </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Due Soon'">
+            <LucideAlarmClock class="h-4 w-4 text-ink-gray-7" />
+          </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Overdue'">
+            <LucideTimerOff class="h-4 w-4 text-ink-gray-7" />
+          </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Blocked'">
+            <LucideShieldAlert class="h-4 w-4 text-ink-gray-7" />
+          </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'SLA Breach'">
+            <LucideAlertTriangle class="h-4 w-4 text-ink-gray-7" />
+          </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Reassignment'">
+            <LucideArrowLeftRight class="h-4 w-4 text-ink-gray-7" />
           </div>
           <div class="text-base text-ink-gray-8">
             {{ d.message }} {{ dayjsLocal(d.creation).fromNow() }}

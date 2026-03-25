@@ -20,6 +20,7 @@ const spaceTabs = [
   { label: 'Discussions', value: 'discussions' },
   { label: 'Pages', value: 'pages' },
   { label: 'Tasks', value: 'tasks' },
+  { label: 'Sprints', value: 'sprints' },
 ]
 
 const currentTab = computed({
@@ -29,6 +30,7 @@ const currentTab = computed({
       SpaceDiscussions: 'discussions',
       SpacePages: 'pages',
       SpaceTasks: 'tasks',
+      SpaceSprints: 'sprints',
     }[currentPage]
   },
   set(value) {
@@ -37,6 +39,7 @@ const currentTab = computed({
       discussions: 'SpaceDiscussions',
       pages: 'SpacePages',
       tasks: 'SpaceTasks',
+      sprints: 'SpaceSprints',
     }[value]
     router.push({ name: routeName, params: { spaceId: props.spaceId } })
   },

@@ -103,6 +103,39 @@
             @update:modelValue="changeSpace"
           />
         </div>
+        <!-- Checklists Section -->
+        <div class="mt-8 border-t pt-6" v-if="task.doc">
+          <h2 class="mb-4 text-base font-semibold text-ink-gray-9">Checklist</h2>
+          <div class="space-y-2 mb-3">
+            <div
+              v-for="(item, idx) in task.doc.checklists || []"
+              :key="item.name || idx"
+              class="flex items-center space-x-3 group"
+            >
+              <input
+                type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                :checked="item.is_completed"
+                @change="toggleChecklist(idx, $event?.target?.checked)"
+              />
+              <input
+                type="text"
+                class="flex-1 rounded-sm border-transparent bg-transparent py-1 px-2 text-sm outline-none hover:bg-surface-gray-2 focus:bg-surface-white focus:ring-2 focus:ring-outline-gray-3 transition-colors"
+                v-model="item.title"
+                @blur="saveChecklist"
+                placeholder="Checklist Item"
+              />
+              <button @click="removeChecklist(idx)" class="opacity-0 group-hover:opacity-100 text-red-500 text-xs px-2">Rem</button>
+            </div>
+          </div>
+          <button
+            @click="addChecklist"
+            class="text-sm text-ink-gray-5 hover:text-ink-gray-9 flex items-center transition-colors"
+          >
+            + Add Checklist Item
+          </button>
+        </div>
+
         <CommentsList class="mt-8" doctype="GP Task" :name="taskId" />
       </div>
     </div>
@@ -141,6 +174,27 @@
             @update:modelValue="changeSpace"
           />
         </div>
+        <div>Parent Task</div>
+        <div>
+          <Combobox
+            placeholder="No parent"
+            :options="[{ label: 'None', value: '' }, ...taskOptions]"
+            :modelValue="task.doc.parent_task || ''"
+            @update:modelValue="task.setValue.submit({ parent_task: $event || '' })"
+            placement="end"
+          />
+        </div>
+        <div>Sprint</div>
+        <div>
+          <select 
+            class="w-full rounded-md border py-1.5 px-2 text-sm focus:border-gray-500 focus:outline-none bg-white text-ink-gray-8"
+            v-model="task.doc.sprint"
+            @change="task.setValue.submit({ sprint: task.doc.sprint })"
+          >
+            <option value="">No Sprint</option>
+            <option v-for="sprint in sprints.data" :key="sprint.name" :value="sprint.name">{{ sprint.title }}</option>
+          </select>
+        </div>
         <div>Status</div>
         <div>
           <Dropdown :options="statusOptions">
@@ -151,6 +205,16 @@
               {{ task.doc.status || 'Set status' }}
             </Button>
           </Dropdown>
+        </div>
+        <div>Blocker Task</div>
+        <div>
+          <Combobox
+            placeholder="No blocker"
+            :options="[{ label: 'None', value: '' }, ...taskOptions]"
+            :modelValue="blockerValue"
+            @update:modelValue="onBlockerChange"
+            placement="end"
+          />
         </div>
         <div>Priority</div>
         <div>
@@ -176,7 +240,7 @@ import CommentsList from '@/components/CommentsList.vue'
 import TaskStatusIcon from '@/components/NewTaskDialog/TaskStatusIcon.vue'
 import TaskPriorityIcon from '@/components/icons/TaskPriorityIcon.vue'
 import DropdownMoreOptions from './DropdownMoreOptions.vue'
-import { Dropdown, LoadingText, DatePicker, Button, Combobox } from 'frappe-ui'
+import { Dropdown, LoadingText, DatePicker, Button, Combobox, useList } from 'frappe-ui'
 import { vFocus } from '@/directives'
 import { activeUsers } from '@/data/users'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
@@ -198,6 +262,40 @@ task.onSuccess((doc) => {
   }
 })
 
+// Load sprints for the task's project only
+const sprints = useList({
+  doctype: 'GP Sprint',
+  fields: ['name', 'title'],
+  filters: () => ({ project: task.doc?.project || '__none__' }),
+  limit: 100,
+  auto: true,
+})
+
+// Tasks in same project for parent/blocker pickers
+const projectTasks = useList({
+  doctype: 'GP Task',
+  fields: ['name', 'title'],
+  filters: () => ({ project: task.doc?.project || '__none__', name: ['!=', props.taskId] }),
+  limit: 200,
+  auto: true,
+})
+
+const taskOptions = computed(() =>
+  (projectTasks.data || []).map((t: any) => ({ label: `${t.name} — ${t.title}`, value: t.name }))
+)
+
+const blockerValue = computed(() => {
+  const dep = (task.doc?.dependencies || []).find((d: any) => d.dependency_type === 'Is Blocked By')
+  return dep?.task || ''
+})
+
+function onBlockerChange(value: string) {
+  const deps = value ? [{ task: value, dependency_type: 'Is Blocked By' }] : []
+  const updates: Record<string, any> = { dependencies: deps }
+  if (value && task.doc?.status !== 'Blocked') updates.status = 'Blocked'
+  task.setValue.submit(updates)
+}
+
 const assignableUsers = computed<{ label: string; value: string }[]>(() => {
   return [
     {
@@ -213,7 +311,7 @@ const assignableUsers = computed<{ label: string; value: string }[]>(() => {
 })
 
 const statusOptions = computed(() =>
-  (['Backlog', 'Todo', 'In Progress', 'Done', 'Canceled'] as Array<GPTask['status']>).map(
+  (['Backlog', 'Todo', 'In Progress', 'In Review', 'Blocked', 'Done', 'Canceled'] as Array<GPTask['status']>).map(
     (status) => ({
       icon: () => h(TaskStatusIcon, { status }),
       label: status,
@@ -243,6 +341,29 @@ function changeSpace(option: string) {
   if (!task.doc) return
   task.doc.project = option
   task.setValue.submit({ project: option }).then(updateRoute)
+}
+
+function addChecklist() {
+  if (!task.doc) return
+  if (!task.doc.checklists) task.doc.checklists = []
+  task.doc.checklists.push({ title: '', is_completed: 0 })
+}
+
+function toggleChecklist(idx: number, state: boolean) {
+  if (!task.doc || !task.doc.checklists) return
+  task.doc.checklists[idx].is_completed = state ? 1 : 0
+  saveChecklist()
+}
+
+function removeChecklist(idx: number) {
+  if (!task.doc || !task.doc.checklists) return
+  task.doc.checklists.splice(idx, 1)
+  saveChecklist()
+}
+
+function saveChecklist() {
+  if (!task.doc) return
+  task.setValue.submit({ checklists: task.doc.checklists })
 }
 
 function updateRoute() {

@@ -10,6 +10,7 @@
   "enabled",
   "full_name",
   "bio",
+  "gp_role",
   "readme",
   "cover_image_section",
   "cover_image",
@@ -57,6 +58,12 @@
    "fieldtype": "Data",
    "label": "Bio",
    "length": 280
+  },
+  {
+   "fieldname": "gp_role",
+   "fieldtype": "Link",
+   "label": "Role",
+   "options": "GP Role"
   },
   {
    "fieldname": "profile_image_section",

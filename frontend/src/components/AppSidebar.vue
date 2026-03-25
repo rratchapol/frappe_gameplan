@@ -195,6 +195,7 @@ import LucideMoreHorizontal from '~icons/lucide/more-horizontal'
 import LucidePencilLine from '~icons/lucide/pencil-line'
 import LucidePieChart from '~icons/lucide/pie-chart'
 import LucideShield from '~icons/lucide/shield'
+import LucideBarChart2 from '~icons/lucide/bar-chart-2'
 
 const showAddTeamDialog = ref(false)
 const showHomePageSettingsDialog = ref(false)
@@ -320,6 +321,15 @@ const navigation = computed(() => {
         name: 'MyTasks',
       },
       isActive: testRoute(/MyTasks|Task/g),
+    },
+    {
+      name: 'Workload',
+      icon: LucideBarChart2,
+      route: {
+        name: 'WorkloadView',
+      },
+      isActive: testRoute(/^WorkloadView$/),
+      condition: () => sessionUser.isNotGuest,
     },
     {
       name: 'People',

@@ -150,6 +150,31 @@ def unread_notifications():
 	return res[0].count
 
 
+@frappe.whitelist()
+@validate_type
+def carry_forward_sprint_tasks(source_sprint: str, target_sprint: str):
+	"""Move all incomplete tasks from source_sprint to target_sprint."""
+	if not frappe.db.exists("GP Sprint", source_sprint):
+		frappe.throw("Source sprint not found")
+	if not frappe.db.exists("GP Sprint", target_sprint):
+		frappe.throw("Target sprint not found")
+
+	source = frappe.db.get_value("GP Sprint", source_sprint, "project")
+	target = frappe.db.get_value("GP Sprint", target_sprint, "project")
+	if source != target:
+		frappe.throw("Both sprints must belong to the same space")
+
+	tasks = frappe.get_all(
+		"GP Task",
+		filters={"sprint": source_sprint, "status": ["not in", ["Done", "Canceled"]]},
+		pluck="name",
+	)
+	for task_name in tasks:
+		frappe.db.set_value("GP Task", task_name, "sprint", target_sprint)
+	frappe.db.commit()
+	return {"moved": len(tasks)}
+
+
 @frappe.whitelist(allow_guest=True)
 @validate_type
 def accept_invitation(key: str = None):

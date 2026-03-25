@@ -81,6 +81,11 @@ let router = createRouter({
       props: true,
     },
     {
+      path: '/workload',
+      name: 'WorkloadView',
+      component: () => import('@/pages/WorkloadView.vue'),
+    },
+    {
       path: '/people',
       name: 'People',
       component: () => import('@/pages/People.vue'),

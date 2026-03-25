@@ -195,6 +195,17 @@
             <option v-for="sprint in sprints.data" :key="sprint.name" :value="sprint.name">{{ sprint.title }}</option>
           </select>
         </div>
+        <div>Points</div>
+        <div>
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            class="w-full rounded-md border py-1.5 px-2 text-sm focus:border-gray-500 focus:outline-none bg-white text-ink-gray-8"
+            :value="task.doc.points || ''"
+            @change="task.setValue.submit({ points: parseInt(($event.target as HTMLInputElement).value) || 0 })"
+          />
+        </div>
         <div>Status</div>
         <div>
           <Dropdown :options="statusOptions">

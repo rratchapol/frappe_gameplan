@@ -11,6 +11,7 @@
   "start_date",
   "end_date",
   "status",
+  "capacity_points",
   "description"
  ],
  "fields": [
@@ -49,6 +50,13 @@
    "in_list_view": 1,
    "label": "Status",
    "options": "Planning\nActive\nCompleted"
+  },
+  {
+   "default": "0",
+   "fieldname": "capacity_points",
+   "fieldtype": "Int",
+   "label": "Capacity Points",
+   "description": "Max story points this sprint can hold (0 = unlimited)"
   },
   {
    "fieldname": "description",

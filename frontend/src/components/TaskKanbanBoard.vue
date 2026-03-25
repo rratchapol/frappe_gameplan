@@ -117,8 +117,8 @@ const props = withDefaults(defineProps<Props>(), {
   listOptions: () => ({ orderBy: 'creation desc', pageLength: 200 }),
 })
 
-type TaskStatus = 'Backlog' | 'Todo' | 'In Progress' | 'Done' | 'Canceled'
-const statusOrder: TaskStatus[] = ['Backlog', 'Todo', 'In Progress', 'Done', 'Canceled']
+type TaskStatus = 'Backlog' | 'Todo' | 'In Progress' | 'Blocked' | 'In Review' | 'Done' | 'Canceled'
+const statusOrder: TaskStatus[] = ['Backlog', 'Todo', 'In Progress', 'Blocked', 'In Review', 'Done', 'Canceled']
 
 interface KanbanColumn {
   status: TaskStatus
@@ -137,10 +137,11 @@ const tasks = useList<TaskWithProject>({
 
 const tasksByStatus = computed<Record<TaskStatus, TaskWithProject[]>>(() => {
   const grouped: Record<TaskStatus, TaskWithProject[]> = {
-    Backlog: [], Todo: [], 'In Progress': [], Done: [], Canceled: [],
+    Backlog: [], Todo: [], 'In Progress': [], Blocked: [], 'In Review': [], Done: [], Canceled: [],
   }
   for (const task of tasks.data || []) {
     const key = ((task as TaskWithProject).status as TaskStatus) || 'Backlog'
+    if (!grouped[key]) grouped[key] = []
     grouped[key].push(task as TaskWithProject)
   }
   return grouped

@@ -18,6 +18,25 @@ class GPUserProfile(Document):
 	def autoname(self):
 		self.name = self.generate_name()
 
+	def on_update(self):
+		if self.has_value_changed("gp_role"):
+			self._sync_frappe_role_from_gp_role()
+
+	def _sync_frappe_role_from_gp_role(self):
+		frappe_role = (
+			frappe.db.get_value("GP Role", self.gp_role, "frappe_role")
+			if self.gp_role
+			else None
+		)
+		if not frappe_role:
+			return
+		user_doc = frappe.get_doc("User", self.user)
+		for _role in list(user_doc.roles):
+			if _role.role in ["Gameplan Guest", "Gameplan Member", "Gameplan Admin"]:
+				user_doc.remove(_role)
+		user_doc.append_roles(frappe_role)
+		user_doc.save(ignore_permissions=True)
+
 	def generate_name(self):
 		full_name = frappe.db.get_value("User", self.user, "full_name")
 		return append_number_if_name_exists(self.doctype, cleanup_page_name(full_name))

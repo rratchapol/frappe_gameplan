@@ -6,7 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "title",
-  "color"
+  "color",
+  "frappe_role"
  ],
  "fields": [
   {
@@ -19,6 +20,13 @@
    "fieldname": "color",
    "fieldtype": "Color",
    "label": "Color"
+  },
+  {
+   "fieldname": "frappe_role",
+   "fieldtype": "Select",
+   "label": "Permission Level",
+   "options": "\nGameplan Guest\nGameplan Member\nGameplan Admin",
+   "description": "Automatically set user's system permission when this role is assigned"
   }
  ],
  "index_web_pages_for_search": 0,

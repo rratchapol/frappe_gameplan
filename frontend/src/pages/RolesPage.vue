@@ -120,6 +120,18 @@
               class="h-8 w-20 cursor-pointer rounded border border-outline-gray-2"
             />
           </div>
+          <div>
+            <label class="mb-1.5 block text-xs text-ink-gray-6">Permission Level</label>
+            <select
+              v-model="roleForm.frappe_role"
+              class="w-full rounded border border-outline-gray-2 bg-surface-white px-3 py-1.5 text-sm text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3"
+            >
+              <option v-for="opt in FRAPPE_ROLE_OPTIONS" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <p class="mt-1 text-xs text-ink-gray-4">Automatically updates the user's system permission when this role is assigned</p>
+          </div>
         </div>
       </template>
       <template #actions>
@@ -149,6 +161,18 @@
               v-model="roleForm.color"
               class="h-8 w-20 cursor-pointer rounded border border-outline-gray-2"
             />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-xs text-ink-gray-6">Permission Level</label>
+            <select
+              v-model="roleForm.frappe_role"
+              class="w-full rounded border border-outline-gray-2 bg-surface-white px-3 py-1.5 text-sm text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-3"
+            >
+              <option v-for="opt in FRAPPE_ROLE_OPTIONS" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <p class="mt-1 text-xs text-ink-gray-4">Automatically updates the user's system permission when this role is assigned</p>
           </div>
         </div>
       </template>
@@ -241,7 +265,15 @@ interface GPRole {
   name: string
   title: string
   color?: string
+  frappe_role?: string
 }
+
+const FRAPPE_ROLE_OPTIONS = [
+  { label: '— None —', value: '' },
+  { label: 'Gameplan Guest', value: 'Gameplan Guest' },
+  { label: 'Gameplan Member', value: 'Gameplan Member' },
+  { label: 'Gameplan Admin', value: 'Gameplan Admin' },
+]
 
 interface GPUserProfileSlim {
   name: string
@@ -251,7 +283,7 @@ interface GPUserProfileSlim {
 
 const roles = useList<GPRole>({
   doctype: 'GP Role',
-  fields: ['name', 'title', 'color'],
+  fields: ['name', 'title', 'color', 'frappe_role'],
   limit: 999,
   cacheKey: 'gp-roles-list',
   immediate: true,
@@ -271,7 +303,7 @@ const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showAssignDialog = ref(false)
 const memberSearch = ref('')
-const roleForm = ref({ title: '', color: '#6366f1' })
+const roleForm = ref({ title: '', color: '#6366f1', frappe_role: '' })
 
 const selectedRole = computed(
   () => roles.data?.find((r : any) => r.name === selectedRoleName.value) ?? null,
@@ -310,22 +342,22 @@ function countMembersInRole(roleName: string): number | '' {
 }
 
 function openCreateDialog() {
-  roleForm.value = { title: '', color: '#6366f1' }
+  roleForm.value = { title: '', color: '#6366f1', frappe_role: '' }
   showCreateDialog.value = true
 }
 
-function createRole() {
+async function createRole() {
   if (!roleForm.value.title.trim()) return
-  roles.insert.submit(
-    { title: roleForm.value.title.trim(), color: roleForm.value.color },
-    {
-      onSuccess(doc: GPRole) {
-        showCreateDialog.value = false
-        roleForm.value = { title: '', color: '#6366f1' }
-        selectedRoleName.value = doc.name
-      },
-    },
-  )
+  const doc = await roles.insert.submit({
+    title: roleForm.value.title.trim(),
+    color: roleForm.value.color,
+    frappe_role: roleForm.value.frappe_role,
+  })
+  if (!roles.insert.error && doc) {
+    showCreateDialog.value = false
+    selectedRoleName.value = (doc as GPRole).name
+    roleForm.value = { title: '', color: '#6366f1', frappe_role: '' }
+  }
 }
 
 function openEditDialog() {
@@ -333,38 +365,43 @@ function openEditDialog() {
   roleForm.value = {
     title: selectedRole.value.title,
     color: selectedRole.value.color || '#6366f1',
+    frappe_role: selectedRole.value.frappe_role || '',
   }
   showEditDialog.value = true
 }
 
-function saveEdit() {
+async function saveEdit() {
   if (!selectedRole.value || !roleForm.value.title.trim()) return
-  roles.setValue.submit(
-    { name: selectedRole.value.name, title: roleForm.value.title.trim(), color: roleForm.value.color },
-    { onSuccess: () => { showEditDialog.value = false } },
-  )
+  await roles.setValue.submit({
+    name: selectedRole.value.name,
+    title: roleForm.value.title.trim(),
+    color: roleForm.value.color,
+    frappe_role: roleForm.value.frappe_role,
+  })
+  if (!roles.setValue.error) {
+    showEditDialog.value = false
+  }
 }
 
-function executeDelete() {
+async function executeDelete() {
   if (!selectedRole.value) return
-  // Clear gp_role from all members first
   const membersToUpdate = selectedMembers.value.slice()
-  membersToUpdate.forEach((p : any) => {
-    profiles.setValue.submit({ name: p.name, gp_role: '' })
-  })
-  roles.delete.submit(selectedRole.value.name, {
-    onSuccess: () => {
-      selectedRoleName.value = null
-      showDeleteDialog.value = false
-    },
-  })
+  for (const p of membersToUpdate as any[]) {
+    await profiles.setValue.submit({ name: p.name, gp_role: '' })
+  }
+  await roles.delete.submit({ name: selectedRole.value.name })
+  if (!roles.delete.error) {
+    selectedRoleName.value = null
+    showDeleteDialog.value = false
+  }
 }
 
-function assignRole(profile: GPUserProfileSlim) {
-  profiles.setValue.submit(
-    { name: profile.name, gp_role: selectedRoleName.value },
-    { onSuccess: () => { showAssignDialog.value = false; memberSearch.value = '' } },
-  )
+async function assignRole(profile: GPUserProfileSlim) {
+  await profiles.setValue.submit({ name: profile.name, gp_role: selectedRoleName.value })
+  if (!profiles.setValue.error) {
+    showAssignDialog.value = false
+    memberSearch.value = ''
+  }
 }
 
 function removeMemberRole(profile: GPUserProfileSlim) {

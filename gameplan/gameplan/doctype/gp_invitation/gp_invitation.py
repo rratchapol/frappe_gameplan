@@ -55,6 +55,11 @@ class GPInvitation(Document):
 		user.save(ignore_permissions=True)
 		self.create_guest_access(user)
 
+		if self.gp_role:
+			profile_name = frappe.db.get_value("GP User Profile", {"user": user.name})
+			if profile_name:
+				frappe.db.set_value("GP User Profile", profile_name, "gp_role", self.gp_role)
+
 		self.status = "Accepted"
 		self.accepted_at = frappe.utils.now()
 		self.save(ignore_permissions=True)

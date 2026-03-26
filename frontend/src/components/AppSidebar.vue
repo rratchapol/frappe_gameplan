@@ -252,7 +252,7 @@ const navigation = computed(() => {
         name: 'Dashboard',
       },
       isActive: testRoute(/^Dashboard$/),
-      condition: () => sessionUser.isNotGuest,
+      condition: () => sessionUser.role === 'Gameplan Admin',
     },
     {
       name: 'Personal Dashboard',
@@ -269,7 +269,7 @@ const navigation = computed(() => {
         name: 'WorkloadView',
       },
       isActive: testRoute(/^WorkloadView$/),
-      condition: () => sessionUser.isNotGuest,
+      condition: () => sessionUser.role === 'Gameplan Admin',
     },
     {
       name: 'Reports',
@@ -278,7 +278,7 @@ const navigation = computed(() => {
         name: 'ReportingPage',
       },
       isActive: testRoute(/^ReportingPage$/),
-      condition: () => sessionUser.isNotGuest,
+      condition: () => sessionUser.role === 'Gameplan Admin',
     },
     {
       name: 'Discussions',
@@ -322,7 +322,7 @@ const navigation = computed(() => {
         name: 'Teams',
       },
       isActive: testRoute(/Teams|Team/g),
-      condition: () => sessionUser.isNotGuest,
+      condition: () => sessionUser.role === 'Gameplan Admin',
     },
     {
       name: 'Spaces',
@@ -348,7 +348,7 @@ const navigation = computed(() => {
         name: 'People',
       },
       isActive: testRoute(/People|PersonProfile/g),
-      condition: () => sessionUser.isNotGuest,
+      condition: () => sessionUser.role === 'Gameplan Admin',
     },
     {
       name: 'Roles',

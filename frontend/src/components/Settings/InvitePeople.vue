@@ -16,19 +16,15 @@
       />
       <template v-if="emails">
         <div>
-          <FormControl
-            label="Role"
-            type="select"
-            :options="[
-              { label: 'Admin', value: 'Gameplan Admin' },
-              { label: 'Member', value: 'Gameplan Member' },
-              { label: 'Guest', value: 'Gameplan Guest' },
-            ]"
-            v-model="role"
+          <label class="mb-1.5 block text-sm leading-4 text-ink-gray-6">Role</label>
+          <Combobox
+            :options="roleOptions"
+            v-model="selectedGPRole"
+            placeholder="Select a role"
           />
           <p class="mt-2 text-base text-ink-gray-8">{{ description }}</p>
         </div>
-        <div v-if="role === 'Gameplan Guest'">
+        <div v-if="isGuestRole">
           <label class="text-sm leading-4 text-ink-gray-6"> Invite Guest to Spaces </label>
           <div class="mt-2">
             <MultiSelect
@@ -38,8 +34,6 @@
               label="Spaces"
               selection-text="spaces"
             />
-
-            {{ selectedProjects }}
           </div>
         </div>
         <ErrorMessage :message="inviteByEmail.error" />
@@ -48,7 +42,7 @@
           @click="
             inviteByEmail.submit({
               emails,
-              role,
+              gp_role: selectedGPRole,
               projects: selectedProjects.length ? selectedProjects : null,
             })
           "
@@ -72,7 +66,9 @@
             <span class="text-ink-gray-8">
               {{ invitation.email }}
             </span>
-            <span class="text-ink-gray-5"> ({{ invitation.role.replace('Gameplan ', '') }}) </span>
+            <span class="text-ink-gray-5">
+              ({{ gpRoleTitleMap[invitation.gp_role] || invitation.role.replace('Gameplan ', '') }})
+            </span>
           </div>
           <div>
             <Tooltip text="Delete Invitation">
@@ -106,34 +102,56 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Tooltip } from 'frappe-ui'
+import { Tooltip, Combobox } from 'frappe-ui'
 import { useCall, useList } from 'frappe-ui'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
 import MultiSelect from '@/components/MultiSelect.vue'
 import { GPInvitation } from '@/types/doctypes'
+import { roles } from '@/data/roles'
 
-type Role = 'Gameplan Admin' | 'Gameplan Member' | 'Gameplan Guest'
+const FRAPPE_ROLE_DESCRIPTIONS: Record<string, string> = {
+  'Gameplan Admin': 'Can create new teams and projects, invite admins and members, browse and create discussions.',
+  'Gameplan Member': 'Can create projects, invite members, browse and create discussions.',
+  'Gameplan Guest': 'Can browse and participate in invited teams or projects.',
+}
 
-const role = ref<Role>('Gameplan Member')
+const selectedGPRole = ref<string | null>(null)
 const emails = ref('')
 const selectedProjects = ref<string[]>([])
 const pendingToDelete = ref<string | null>(null)
 
 const groupedSpaceOptions = useGroupedSpaceOptions({ filterFn: (space) => !space.archived_at })
 
+const roleOptions = computed(() =>
+  (roles.data || []).map((r) => ({
+    label: r.title,
+    value: r.name,
+    description: r.frappe_role?.replace('Gameplan ', '') || '',
+  })),
+)
+
+const selectedRoleData = computed(() =>
+  (roles.data || []).find((r) => r.name === selectedGPRole.value),
+)
+
+const isGuestRole = computed(
+  () => selectedRoleData.value?.frappe_role === 'Gameplan Guest',
+)
+
 const description = computed((): string => {
-  const descriptions: Record<Role, string> = {
-    'Gameplan Admin':
-      'Can create new teams and projects, invite admins and members, browse and create discussions.',
-    'Gameplan Member': 'Can create projects, invite members, browse and create discussions.',
-    'Gameplan Guest': 'Can browse and participate in invited teams or projects.',
-  }
-  return descriptions[role.value]
+  if (!selectedRoleData.value) return ''
+  return FRAPPE_ROLE_DESCRIPTIONS[selectedRoleData.value.frappe_role || ''] || ''
 })
 
-const pendingInvitations = useList<GPInvitation>({
+const gpRoleTitleMap = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {}
+  for (const r of roles.data || []) map[r.name] = r.title
+  return map
+})
+
+const pendingInvitations = useList<GPInvitation & { gp_role: string }>({
   doctype: 'GP Invitation',
-  fields: ['name', 'email', 'role'],
+  fields: ['name', 'email', 'role', 'gp_role'],
   filters: { status: 'Pending' },
 })
 
@@ -141,7 +159,7 @@ const inviteByEmail = useCall<
   undefined,
   {
     emails: string
-    role: string
+    gp_role: string | null
     projects: string[] | null
   }
 >({
@@ -149,7 +167,7 @@ const inviteByEmail = useCall<
   method: 'POST',
   immediate: false,
   onSuccess: () => {
-    role.value = 'Gameplan Member'
+    selectedGPRole.value = null
     emails.value = ''
     selectedProjects.value = []
     pendingInvitations.reload()

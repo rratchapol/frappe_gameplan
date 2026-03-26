@@ -21,15 +21,11 @@
         </li>
       </ul>
       <div>
-        <Autocomplete
+        <Combobox
           :options="invitableUsers"
           v-model="selectedUser"
           placeholder="Add member by name"
-        >
-          <template #item-prefix="{ option }">
-            <UserAvatar :user="option.email" size="sm" />
-          </template>
-        </Autocomplete>
+        />
         <ErrorMessage class="mt-2" :message="resource.addMembers.error" />
       </div>
       <div class="mt-4" v-show="!addMembersIntent">
@@ -71,8 +67,7 @@
   </Dialog>
 </template>
 <script>
-import { Autocomplete, ErrorMessage } from 'frappe-ui'
-import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from '@headlessui/vue'
+import { Combobox, ErrorMessage } from 'frappe-ui'
 import { activeUsers } from '@/data/users'
 
 export default {
@@ -81,25 +76,20 @@ export default {
   components: {
     ErrorMessage,
     Combobox,
-    ComboboxInput,
-    ComboboxOptions,
-    ComboboxOption,
-    Autocomplete,
   },
   data() {
     return {
       membersToAdd: [],
-      query: '',
       selectedUser: null,
       addMembersIntent: false,
     }
   },
   watch: {
-    selectedUser(user) {
-      if (user === null) return
-      if (!this.membersToAdd.includes(user)) {
+    selectedUser(userEmail) {
+      if (!userEmail) return
+      let user = activeUsers.value.find((u) => u.email === userEmail)
+      if (user && !this.membersToAdd.find((m) => m.email === userEmail)) {
         this.membersToAdd.push(user)
-        this.query = ''
         this.selectedUser = null
       }
     },
@@ -118,7 +108,7 @@ export default {
     },
     members() {
       return this.resource.doc.members.map((member) => {
-        let { full_name, user_image } = this.$user(member.email)
+        let { full_name, user_image } = this.$user(member.user)
         return {
           ...member,
           full_name,
@@ -127,42 +117,17 @@ export default {
       })
     },
     invitableUsers() {
-      let memberEmails = this.members.map((m) => m.email)
+      let memberEmails = this.members.map((m) => m.user)
       memberEmails = memberEmails.concat(this.membersToAdd.map((user) => user.email))
 
       return activeUsers.value
         .filter((user) => !memberEmails.includes(user.email))
-        .sort((a, b) => a.full_name - b.full_name)
-        .map((user) => {
-          return {
-            label: user.full_name,
-            value: user.email,
-            ...user,
-          }
-        })
-    },
-    filteredUsers() {
-      if (!this.query) {
-        return this.invitableUsers
-      } else {
-        let users = this.invitableUsers.filter((user) => {
-          let searchTexts = [user.full_name.toLowerCase(), user.email]
-          return searchTexts.some((text) => text.includes(this.query))
-        })
-        if (users.length == 0) {
-          // https://stackoverflow.com/a/46181
-          let emailRegex =
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-
-          if (emailRegex.test(this.query)) {
-            users.push({
-              icon: 'mail',
-              email: this.query,
-            })
-          }
-        }
-        return users
-      }
+        .sort((a, b) => a.full_name.localeCompare(b.full_name))
+        .map((user) => ({
+          label: user.full_name,
+          value: user.email,
+          description: user.email,
+        }))
     },
   },
   methods: {
@@ -176,7 +141,6 @@ export default {
     resetValues() {
       this.open = false
       this.membersToAdd = []
-      this.query = ''
       this.selectedUser = null
       this.addMembersIntent = false
     },

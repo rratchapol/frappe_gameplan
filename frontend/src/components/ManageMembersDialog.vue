@@ -133,16 +133,17 @@ let guestEmail = ref('')
 
 function addMember() {
   if (space.value && selectedUser.value) {
+    const userToAdd = selectedUser.value
+    const spaceName = space.value.title
     spaces.runDocMethod
       .submit({
         name: space.value.name,
         method: 'add_member',
-        params: { user: selectedUser.value },
+        params: { user: userToAdd },
       })
       .then(() => {
         selectedUser.value = null
-        let fullName = useUser(selectedUser.value).full_name
-        let spaceName = useSpace(space.value?.name).value?.title
+        let fullName = useUser(userToAdd).full_name
         toast.success(`${fullName} added to ${spaceName}`)
         guests.reload()
       })

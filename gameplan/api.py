@@ -109,7 +109,12 @@ def remove_user(user: str):
 
 @frappe.whitelist()
 @validate_type
-def invite_by_email(emails: str, role: str, projects: list = None):
+def invite_by_email(emails: str, role: str = None, gp_role: str = None, projects: list = None):
+	if gp_role:
+		frappe_role = frappe.db.get_value("GP Role", gp_role, "frappe_role")
+		role = frappe_role or "Gameplan Member"
+	if not role:
+		role = "Gameplan Member"
 	if not emails:
 		return
 	email_string = validate_email_address(emails, throw=False)
@@ -135,9 +140,13 @@ def invite_by_email(emails: str, role: str, projects: list = None):
 		projects = frappe.as_json(projects, indent=None)
 
 	for email in to_invite:
-		frappe.get_doc(doctype="GP Invitation", email=email, role=role, projects=projects).insert(
-			ignore_permissions=True
-		)
+		frappe.get_doc(
+			doctype="GP Invitation",
+			email=email,
+			role=role,
+			gp_role=gp_role or None,
+			projects=projects,
+		).insert(ignore_permissions=True)
 
 
 @frappe.whitelist()

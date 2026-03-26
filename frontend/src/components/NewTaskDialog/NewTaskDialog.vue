@@ -22,8 +22,8 @@
         />
         <div class="grid grid-cols-2 gap-2">
           <Combobox
-            placeholder="Assign a user"
-            :options="assignableUsers"
+            placeholder="Assign a user or role"
+            :options="assignableOptions"
             v-model="newTask.doc.assigned_to"
           />
           <DatePicker
@@ -82,13 +82,14 @@
 </template>
 <script setup lang="ts">
 import { computed, h, useTemplateRef, watch } from 'vue'
-import { Dialog, FormControl, Dropdown, Combobox, DatePicker } from 'frappe-ui'
+import { Dialog, FormControl, Dropdown, Combobox, DatePicker, useNewDoc } from 'frappe-ui'
 import TaskStatusIcon from './TaskStatusIcon.vue'
 import { activeUsers } from '@/data/users'
 import { GPTask } from '@/types/doctypes'
 import { showDialog, newTask, _onSuccess } from './state'
 import { useGroupedSpaceOptions } from '@/data/groupedSpaces'
 import KeyboardShortcut from '../KeyboardShortcut.vue'
+import { roles, roleUsersMap } from '@/data/roles'
 
 const titleInput = useTemplateRef('titleInput')
 let spaceOptions = useGroupedSpaceOptions({ filterFn: (space) => !space.archived_at })
@@ -109,14 +110,33 @@ function statusOptions() {
   )
 }
 
-const assignableUsers = computed(() => {
-  return activeUsers.value.map((user: any) => ({
-    label: user.full_name,
-    value: user.name,
-  }))
+const assignableOptions = computed(() => {
+  const result = []
+
+  if (roles.data?.length) {
+    result.push({
+      group: 'Roles',
+      options: roles.data.map((role) => ({
+        label: role.title,
+        value: `role:${role.name}`,
+        description: `${(roleUsersMap.value[role.name] || []).length} members`,
+      })),
+    })
+  }
+
+  result.push({
+    group: 'Users',
+    options: activeUsers.value.map((user: any) => ({
+      label: user.full_name,
+      value: user.name,
+      description: user.email,
+    })),
+  })
+
+  return result
 })
 
-function onCreateClick(e: KeyboardEvent) {
+async function onCreateClick(e: KeyboardEvent) {
   if (e instanceof KeyboardEvent && !(e.ctrlKey || e.metaKey)) {
     return
   }
@@ -124,6 +144,21 @@ function onCreateClick(e: KeyboardEvent) {
   if (!newTask.value) return
   if (!newTask.value.doc.title) {
     newTask.value.error = new Error('Task title is required')
+    return
+  }
+
+  const assignedTo = newTask.value.doc.assigned_to
+  if (assignedTo?.startsWith('role:')) {
+    const roleName = assignedTo.slice(5)
+    const members = roleUsersMap.value[roleName] || []
+    const baseDoc = { ...newTask.value.doc }
+    const tasks = members.length > 0 ? members : [null]
+    for (const user of tasks) {
+      const draft = useNewDoc<GPTask>('GP Task', { ...baseDoc, assigned_to: user || '' })
+      await draft.submit()
+    }
+    showDialog.value = false
+    _onSuccess.value(null as any)
     return
   }
 

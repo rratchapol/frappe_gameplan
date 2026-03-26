@@ -12,10 +12,14 @@
 - **Spaces** (GP Project) — พื้นที่สำหรับจัดกลุ่ม Discussion / Task / Page ตาม topic
 - **Projects** (GP Team) — Category ที่ใช้รวม Space หลายๆ อันไว้ด้วยกัน
 - **Discussions** — กระทู้หลักสำหรับถกเถียงแบบ async ไม่ต้องอยู่พร้อมกัน
-- **Tasks** — การจัดการงานพร้อม SLA, Dependency, Auto-assignment
+- **Tasks** — การจัดการงานพร้อม SLA, Dependency, Auto-assignment, Sprint
 - **Pages** — Collaborative documents คล้ายกับ Notion
-- **Notifications** — แจ้งเตือนเมื่อมี mention, reaction, or assignment
+- **Notifications** — แจ้งเตือน mention, reaction, assignment, role changed, project added, task status changed
 - **Full-text Search** — ค้นหา Discussion / Task / Page / Comment ด้วย SQLite FTS5
+- **Roles** — GP Role ผูกกับ Frappe Role (Admin / Member / Guest) ต่อ user
+- **Invitations** — เชิญ user ใหม่ผ่าน email พร้อมกำหนด GP Role
+- **Workload** — วัด capacity และบันทึก workload snapshot รายวัน
+- **SLA** — กำหนดระยะเวลาตอบสนองต่อ task พร้อม escalation
 
 ---
 
@@ -215,6 +219,23 @@ POST /api/resource/GP Comment
 
 ## 7. Flow: Notifications (การแจ้งเตือน)
 
+### ประเภททั้งหมดของ GP Notification
+
+| type | เกิดจาก |
+|---|---|
+| `Mention` | ถูก @mention ใน discussion/comment/task |
+| `Rich Quote` | มีคน quote content ของเรา |
+| `Reaction` | มีคน react emoji กับ post ของเรา |
+| `Assignment` | ถูก assign task |
+| `Reassignment` | task ถูก reassign มาหาเรา |
+| `Due Soon` | task ใกล้ถึง due date (engine รายวัน) |
+| `Overdue` | task เลย due date แล้ว (engine รายวัน) |
+| `Blocked` | task ถูก mark เป็น Blocked |
+| `SLA Breach` | discussion/task เกิน SLA (engine รายชั่วโมง) |
+| `Role Changed` | GP Role ของเราถูกเปลี่ยน |
+| `Project Added` | ถูกเพิ่มเข้า Space |
+| `Task Status Changed` | status ของ task ที่เรา own/assigned ถูกเปลี่ยน |
+
 ### เมื่อมี **@mention**
 
 ```
@@ -398,7 +419,8 @@ check_sla_breaches()  (รัน hourly)
 | `GP Sprint` | Sprint | Sprint planning สำหรับจัด task ลงใน sprint |
 | `GP Poll` | Poll | การโหวต embed ใน Discussion |
 | `GP Draft` | Draft | Discussion ที่ยังไม่ publish |
-| `GP Invitation` | — | Invitation link สำหรับเชิญ user เข้าระบบ |
+| `GP Invitation` | — | Invitation link สำหรับเชิญ user เข้าระบบ พร้อม gp_role |
+| `GP Role` | Role | กำหนดชื่อ role + Frappe role mapping |
 
 ---
 
@@ -433,9 +455,31 @@ check_sla_breaches()  (รัน hourly)
 
 ---
 
-## 13. Permission System
+## 13. Roles & Permissions
 
-Gameplan มี 3 roles:
+### GP Role vs Frappe Role
+
+Gameplan มีสองชั้นของ role:
+
+| ชั้น | DocType | หน้าที่ |
+|---|---|---|
+| **GP Role** | `GP Role` | ชื่อ role ที่แสดงใน UI เช่น "Developer", "Designer" |
+| **Frappe Role** | field `frappe_role` ใน GP Role | role จริงที่ตัดสินสิทธิ์ใน Frappe |
+
+เมื่อ Admin เปลี่ยน `gp_role` ของ user ใน `GP User Profile`:
+
+```
+GPUserProfile.on_update()
+    └── has_value_changed("gp_role")
+        ├── _sync_frappe_role_from_gp_role()
+        │      ├── ดึง frappe_role จาก GP Role
+        │      ├── ลบ Gameplan role เก่าทั้งหมดออกจาก User
+        │      └── append_roles(frappe_role) → save user
+        └── _notify_role_changed()
+               → สร้าง GP Notification ประเภท "Role Changed" ส่งให้ user
+```
+
+### Frappe Permission Roles
 
 | Role | สิทธิ์ |
 |---|---|
@@ -450,7 +494,64 @@ Logic หลักอยู่ใน:
 
 ---
 
-## 14. Full-text Search (`search_sqlite.py`)
+## 14. Flow: Invitation (การเชิญ user)
+
+### เมื่อ Admin **เชิญ user ใหม่**
+
+```
+API: invite_by_email(emails, gp_role)
+    ├── ดึง frappe_role จาก GP Role
+    ├── กรอง email ที่มี user หรือ invitation อยู่แล้ว
+    └── ต่อ email ที่เหลือ:
+           └→ frappe.get_doc(doctype="GP Invitation", ...).insert()
+
+GPInvitation.before_insert()
+    ├── validate email format
+    ├── ถ้า role == Guest และไม่มี project → throw error
+    ├── generate key (12-char hash)
+    ├── invited_by = session.user
+    └── status = "Pending"
+
+GPInvitation.after_insert()
+    └── invite_via_email()
+           → sendmail ส่ง link: /api/method/gameplan.api.accept_invitation?key=<hash>
+```
+
+### เมื่อ user **คลิก Accept**
+
+```
+GET /api/method/gameplan.api.accept_invitation?key=<hash>
+    └→ GPInvitation.accept()
+        ├── เช็ค status ≠ Expired
+        ├── create_user_if_not_exists()    → สร้าง Frappe User ถ้ายังไม่มี
+        ├── user.append_roles(role)        → ให้ Frappe Role
+        ├── create_guest_access(user)      → ถ้าเป็น Guest: สร้าง GP Guest Access ต่อ project
+        ├── ถ้ามี gp_role → db_set gp_role ใน GP User Profile
+        ├── status = "Accepted"
+        └── redirect ไปหน้า /g/
+```
+
+---
+
+## 15. Flow: Sprint
+
+Sprint คือช่วงเวลาสำหรับจัด task ลงไปทำ เชื่อมกับ GP Project (Space)
+
+```
+GP Sprint fields:
+    name, title, project, status (Open/Closed), starts_on, ends_on
+
+Task ใน Sprint:
+    GP Task.sprint → Link → GP Sprint
+
+API: carry_forward_sprint_tasks(source_sprint, target_sprint)
+    ├── ตรวจว่าทั้งสอง sprint อยู่ใน project เดียวกัน
+    └── bulk db_set sprint = target_sprint สำหรับ task ที่ยังไม่ Done/Canceled
+```
+
+---
+
+## 16. Full-text Search (`search_sqlite.py`)
 
 ```
 GameplanSearch (extends SQLiteSearch)
@@ -469,7 +570,7 @@ User พิมพ์ใน Search bar
 
 ---
 
-## 15. Frontend Architecture (Vue 3 SPA)
+## 17. Frontend Architecture (Vue 3 SPA)
 
 ### Entry Flow
 
@@ -542,7 +643,7 @@ Backend trigger (gameplan/__init__.py):
 
 ---
 
-## 16. ถ้าอยากแก้อะไร ไปที่ไหน
+## 18. ถ้าอยากแก้อะไร ไปที่ไหน
 
 | ต้องการ | ไปแก้ที่ |
 |---|---|
@@ -565,10 +666,14 @@ Backend trigger (gameplan/__init__.py):
 | แก้ data fetching composable | `frontend/src/data/<name>.ts` |
 | แก้ routing | `frontend/src/router.js` |
 | แก้ real-time event | `frontend/src/socket.js` + backend `gameplan.refetch_resource()` |
+| แก้ GP Role / permission mapping | `gameplan/doctype/gp_role/gp_role.json` + `gp_user_profile.py` |
+| แก้ invitation flow | `gameplan/doctype/gp_invitation/gp_invitation.py` + `api.py invite_by_email()` |
+| แก้ Sprint carry-forward logic | `gameplan/api.py carry_forward_sprint_tasks()` |
+| แก้ workload calculation | `gameplan/engines/workload.py` |
 
 ---
 
-## 17. การไหลของข้อมูล (Data Flow Summary)
+## 19. การไหลของข้อมูล (Data Flow Summary)
 
 ```
 User สร้าง Discussion ใหม่
@@ -595,9 +700,25 @@ User สร้าง Task
                           ถ้าไม่มี assignee → AssignmentEngine (auto-assign)
 
 Hourly (background)
-    → SLA Engine     → ตรวจงานที่หลุด SLA → สร้าง GP Notification
+    → SLA Engine     → ตรวจงานที่หลุด SLA → สร้าง GP Notification (SLA Breach)
+                       → ตรวจ GP Invitation ที่หมดอายุ → ลบออก
 
 Daily (background)
-    → WorkloadEngine → บันทึก GP Workload Snapshot รายวัน
-    → DueDateNotifier → แจ้งเตือน task ที่ใกล้ครบกำหนด
+    → WorkloadEngine  → บันทึก GP Workload Snapshot รายวัน
+    → DueDateNotifier → แจ้งเตือน task ที่ใกล้ครบกำหนด (Due Soon) หรือเกินแล้ว (Overdue)
+
+Admin เปลี่ยน GP Role ของ user
+    ↓ GPUserProfile.on_update()
+    ↓ _sync_frappe_role_from_gp_role() → อัปเดต Frappe User role
+    ↓ _notify_role_changed() → สร้าง GP Notification (Role Changed)
+
+Admin เพิ่ม user เข้า Space
+    ↓ GPProject.add_member(user)
+    ↓ append + save
+    ↓ _notify_member_added() → สร้าง GP Notification (Project Added)
+
+Task status เปลี่ยน (non-Blocked)
+    ↓ log_value_updates() ตรวจ field "status"
+    ↓ notify_status_changed() → สร้าง GP Notification (Task Status Changed)
+           ส่งให้ assigned_to หรือ owner (ถ้าไม่ใช่คนที่เปลี่ยนเอง)
 ```

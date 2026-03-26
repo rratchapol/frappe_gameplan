@@ -80,7 +80,31 @@
           <div class="px-5 py-3">
             <div class="mb-1.5 flex items-center justify-between text-xs text-ink-gray-5">
               <span>{{ member.currentPoints }} pts active</span>
-              <span>Max: {{ member.maxPoints }} pts/week</span>
+              <div class="flex items-center gap-1">
+                <template v-if="editingUser === member.user">
+                  <input
+                    v-model.number="editingValue"
+                    type="number"
+                    min="1"
+                    class="w-14 rounded border border-outline-gray-3 bg-surface-white px-1.5 py-0.5 text-xs text-ink-gray-8 focus:outline-none focus:ring-1 focus:ring-outline-gray-4"
+                    @keyup.enter="saveCapacity(member.user, member.profileName)"
+                    @keyup.escape="editingUser = null"
+                  />
+                  <span class="text-ink-gray-5">pts/week</span>
+                  <button @click="saveCapacity(member.user, member.profileName)" class="text-ink-gray-6 hover:text-ink-gray-9">
+                    <LucideCheck class="h-3 w-3" />
+                  </button>
+                  <button @click="editingUser = null" class="text-ink-gray-4 hover:text-ink-gray-7">
+                    <LucideX class="h-3 w-3" />
+                  </button>
+                </template>
+                <template v-else>
+                  <span>Max: {{ member.maxPoints }} pts/week</span>
+                  <button @click="startEdit(member.user, member.maxPoints)" class="text-ink-gray-3 hover:text-ink-gray-6">
+                    <LucidePencil class="h-3 w-3" />
+                  </button>
+                </template>
+              </div>
             </div>
             <div class="h-2 w-full overflow-hidden rounded-full bg-surface-gray-3">
               <div
@@ -138,14 +162,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useList, Badge } from 'frappe-ui'
 import { users } from '@/data/users'
 
 // Capacity profiles: max points per user per week
 const capacityProfiles = useList({
   doctype: 'GP Capacity Profile',
-  fields: ['user', 'max_points_per_week'],
+  fields: ['name', 'user', 'max_points_per_week'],
   limit: 999,
   auto: true,
 })
@@ -166,9 +190,9 @@ const activeMembers = computed(() => {
 const workloadData = computed(() => {
   if (!activeTasks.isFinished || !capacityProfiles.isFinished) return []
 
-  const capacityMap: Record<string, number> = {}
+  const capacityMap: Record<string, { maxPoints: number; profileName: string | null }> = {}
   for (const cp of (capacityProfiles.data || []) as any[]) {
-    capacityMap[cp.user] = cp.max_points_per_week ?? 40
+    capacityMap[cp.user] = { maxPoints: cp.max_points_per_week ?? 40, profileName: cp.name }
   }
 
   const tasksByUser: Record<string, any[]> = {}
@@ -182,7 +206,8 @@ const workloadData = computed(() => {
     .map((user: any) => {
       const tasks = tasksByUser[user.name] || []
       const currentPoints = tasks.reduce((sum: number, t: any) => sum + (t.points || 0), 0)
-      const maxPoints = capacityMap[user.name] ?? 40
+      const maxPoints = capacityMap[user.name]?.maxPoints ?? 40
+      const profileName = capacityMap[user.name]?.profileName ?? null
       const utilization = maxPoints > 0 ? Math.round((currentPoints / maxPoints) * 100) : 0
       return {
         user: user.name,
@@ -190,6 +215,7 @@ const workloadData = computed(() => {
         userImage: user.user_image,
         currentPoints,
         maxPoints,
+        profileName,
         utilization,
         tasks,
         isOverloaded: currentPoints > maxPoints,
@@ -199,6 +225,25 @@ const workloadData = computed(() => {
 })
 
 const overloadedCount = computed(() => workloadData.value.filter(m => m.isOverloaded).length)
+
+const editingUser = ref<string | null>(null)
+const editingValue = ref(40)
+
+function startEdit(user: string, currentMax: number) {
+  editingUser.value = user
+  editingValue.value = currentMax
+}
+
+async function saveCapacity(user: string, profileName: string | null) {
+  if (!editingValue.value || editingValue.value < 1) return
+  if (profileName) {
+    await capacityProfiles.setValue.submit({ name: profileName, max_points_per_week: editingValue.value })
+  } else {
+    await capacityProfiles.insert.submit({ user, max_points_per_week: editingValue.value })
+  }
+  editingUser.value = null
+  capacityProfiles.reload()
+}
 
 function isOverdue(dateStr: string) {
   return dateStr < new Date().toISOString().split('T')[0]

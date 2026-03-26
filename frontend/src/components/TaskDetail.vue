@@ -188,8 +188,8 @@
         <div>
           <select
             class="w-full rounded-md border py-1.5 px-2 text-sm focus:border-gray-500 focus:outline-none bg-white text-ink-gray-8"
-            :value="task.doc.task_type || ''"
-            @change="task.setValue.submit({ task_type: ($event.target as HTMLSelectElement).value })"
+            v-model="task.doc.task_type"
+            @change="task.setValue.submit({ task_type: task.doc.task_type })"
           >
             <option value="">— None —</option>
             <option>Bug</option>

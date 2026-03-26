@@ -8,6 +8,8 @@
  "field_order": [
   "user",
   "snapshot_date",
+  "assigned_points",
+  "completed_points",
   "total_points",
   "overdue_tasks"
  ],
@@ -28,14 +30,24 @@
    "reqd": 1
   },
   {
+   "fieldname": "assigned_points",
+   "fieldtype": "Int",
+   "label": "Assigned Points"
+  },
+  {
+   "fieldname": "completed_points",
+   "fieldtype": "Int",
+   "label": "Completed Points"
+  },
+  {
    "fieldname": "total_points",
    "fieldtype": "Int",
-   "label": "Total Points Assigned"
+   "label": "Remaining Points"
   },
   {
    "fieldname": "overdue_tasks",
    "fieldtype": "Int",
-   "label": "Overdue Tasks Count"
+   "label": "Incomplete Tasks Count"
   }
  ],
  "grid_page_length": 50,

@@ -25,7 +25,7 @@
 
     <div class="flex-1 overflow-auto p-6">
       <!-- Loading state -->
-      <div v-if="!activeTasks.isFinished || !capacityProfiles.isFinished" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div v-if="!weekTasks.isFinished || !noDueTasks.isFinished || !capacityProfiles.isFinished" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div v-for="i in 6" :key="i" class="h-48 animate-pulse rounded-2xl bg-surface-gray-3" />
       </div>
 
@@ -72,14 +72,14 @@
               <p class="text-lg font-extrabold" :class="member.isOverloaded ? 'text-red-600' : 'text-ink-gray-8'">
                 {{ member.utilization }}%
               </p>
-              <p class="text-xs text-ink-gray-5">utilized</p>
+              <p class="text-xs text-ink-gray-5">of capacity</p>
             </div>
           </div>
 
-          <!-- Capacity bar -->
-          <div class="px-5 py-3">
+          <!-- Capacity / Utilization bar -->
+          <div class="px-5 pt-3 pb-2">
             <div class="mb-1.5 flex items-center justify-between text-xs text-ink-gray-5">
-              <span>{{ member.currentPoints }} pts active</span>
+              <span>{{ member.assignedPoints }} pts assigned</span>
               <div class="flex items-center gap-1">
                 <template v-if="editingUser === member.user">
                   <input
@@ -106,6 +106,7 @@
                 </template>
               </div>
             </div>
+            <!-- Utilization bar -->
             <div class="h-2 w-full overflow-hidden rounded-full bg-surface-gray-3">
               <div
                 class="h-full rounded-full transition-all duration-500"
@@ -119,17 +120,48 @@
             </div>
           </div>
 
-          <!-- Active tasks list -->
+          <!-- Completion bar -->
+          <div class="px-5 pb-3">
+            <div class="mb-1.5 flex items-center justify-between text-xs text-ink-gray-5">
+              <span>{{ member.completedPoints }} / {{ member.assignedPoints }} pts done</span>
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="rounded px-1.5 py-0.5 text-xs font-semibold"
+                  :class="member.assignedPoints === 0 ? 'text-ink-gray-4' : member.isOnTrack ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50'"
+                >
+                  {{ member.completionRate }}% done
+                </span>
+                <LucideTrendingUp v-if="member.isOnTrack && member.assignedPoints > 0" class="h-3 w-3 text-green-500" />
+                <LucideTrendingDown v-else-if="member.assignedPoints > 0" class="h-3 w-3 text-orange-400" />
+              </div>
+            </div>
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-gray-3">
+              <div
+                class="h-full rounded-full bg-green-400 transition-all duration-500"
+                :style="{ width: member.completionRate + '%' }"
+              />
+            </div>
+          </div>
+
+          <!-- Tasks list -->
           <div class="flex-1 px-5 pb-4">
-            <p class="mb-2 text-xs font-semibold text-ink-gray-5">
-              ACTIVE TASKS ({{ member.tasks.length }})
-            </p>
-            <div v-if="member.tasks.length === 0" class="py-3 text-center text-xs text-ink-gray-4">
-              No active tasks
+            <div class="mb-2 flex items-center gap-2">
+              <p class="text-xs font-semibold text-ink-gray-5">
+                REMAINING ({{ member.remainingTasks.length }})
+              </p>
+              <span v-if="member.doneTasks.length > 0" class="text-xs text-green-600 font-medium">
+                · {{ member.doneTasks.length }} done ✓
+              </span>
+            </div>
+            <div v-if="member.remainingTasks.length === 0 && member.assignedPoints === 0" class="py-3 text-center text-xs text-ink-gray-4">
+              No tasks this week
+            </div>
+            <div v-else-if="member.remainingTasks.length === 0" class="py-3 text-center text-xs text-green-600 font-medium">
+              All tasks done!
             </div>
             <ul v-else class="space-y-1.5 max-h-40 overflow-y-auto">
               <li
-                v-for="task in member.tasks.slice(0, 8)"
+                v-for="task in member.remainingTasks.slice(0, 8)"
                 :key="task.name"
                 class="flex items-center justify-between rounded-lg bg-surface-gray-1 px-2.5 py-1.5 text-xs"
               >
@@ -150,8 +182,8 @@
                   </span>
                 </div>
               </li>
-              <li v-if="member.tasks.length > 8" class="text-center text-xs text-ink-gray-4 pt-1">
-                +{{ member.tasks.length - 8 }} more
+              <li v-if="member.remainingTasks.length > 8" class="text-center text-xs text-ink-gray-4 pt-1">
+                +{{ member.remainingTasks.length - 8 }} more
               </li>
             </ul>
           </div>
@@ -170,7 +202,7 @@ import { users } from '@/data/users'
 function getWeekBounds() {
   const d = new Date()
   d.setHours(0, 0, 0, 0)
-  const day = d.getDay() // 0=Sun, 1=Mon...
+  const day = d.getDay()
   const diffToMonday = day === 0 ? -6 : 1 - day
   const monday = new Date(d)
   monday.setDate(d.getDate() + diffToMonday)
@@ -181,23 +213,22 @@ function getWeekBounds() {
 }
 
 const { monday: weekStart, sunday: weekEnd } = getWeekBounds()
+const weekStartStr = weekStart.toISOString().split('T')[0]
+const weekEndStr = weekEnd.toISOString().split('T')[0]
 
 const weekLabel = computed(() => {
   const fmt = (d: Date) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
   return `${fmt(weekStart)} – ${fmt(weekEnd)}`
 })
 
-// task นับเข้า workload สัปดาห์นี้ถ้า:
-// - มี due_date ≤ วันอาทิตย์ของ week นี้ (ครอบคลุม overdue ที่ยังค้างอยู่)
-// - ไม่มี due_date แต่สถานะ In Progress (กำลังทำอยู่จริง)
-function isInThisWeek(task: any): boolean {
-  if (!task.due_date) return task.status === 'In Progress'
-  const due = new Date(task.due_date)
-  due.setHours(0, 0, 0, 0)
-  return due <= weekEnd
+// ความคืบหน้าที่ควรทำได้ตามวันในสัปดาห์ (จ=0%, อ=20%, พ=40%, พฤ=60%, ศ=80%, เสาร์/อา=100%)
+function getExpectedProgress(): number {
+  const day = new Date().getDay()
+  if (day === 0 || day === 6) return 100
+  return Math.round(((day - 1) / 5) * 100)
 }
+const expectedProgress = getExpectedProgress()
 
-// Capacity profiles: max points per user per week
 const capacityProfiles = useList({
   doctype: 'GP Capacity Profile',
   fields: ['name', 'user', 'max_points_per_week'],
@@ -205,12 +236,28 @@ const capacityProfiles = useList({
   auto: true,
 })
 
-// All active tasks across the whole org
-const activeTasks = useList({
+// Tasks ที่ due ใน week นี้ (รวม Done เพื่อวัด completion)
+const weekTasks = useList({
   doctype: 'GP Task',
-  fields: ['name', 'title', 'assigned_to', 'points', 'status', 'priority', 'due_date', 'project'],
-  filters: { status: ['not in', ['Done', 'Canceled']], assigned_to: ['is', 'set'] },
+  fields: ['name', 'title', 'assigned_to', 'points', 'status', 'priority', 'due_date'],
+  filters: {
+    due_date: ['between', [weekStartStr, weekEndStr]],
+    assigned_to: ['is', 'set'],
+  },
   limit: 9999,
+  auto: true,
+})
+
+// In Progress ที่ไม่มี due_date (กำลังทำอยู่จริง นับเข้า week นี้)
+const noDueTasks = useList({
+  doctype: 'GP Task',
+  fields: ['name', 'title', 'assigned_to', 'points', 'status', 'priority', 'due_date'],
+  filters: {
+    status: 'In Progress',
+    due_date: ['is', 'not set'],
+    assigned_to: ['is', 'set'],
+  },
+  limit: 999,
   auto: true,
 })
 
@@ -219,38 +266,50 @@ const activeMembers = computed(() => {
 })
 
 const workloadData = computed(() => {
-  if (!activeTasks.isFinished || !capacityProfiles.isFinished) return []
+  if (!weekTasks.isFinished || !noDueTasks.isFinished || !capacityProfiles.isFinished) return []
 
   const capacityMap: Record<string, { maxPoints: number; profileName: string | null }> = {}
   for (const cp of (capacityProfiles.data || []) as any[]) {
     capacityMap[cp.user] = { maxPoints: cp.max_points_per_week ?? 40, profileName: cp.name }
   }
 
-  const tasksByUser: Record<string, any[]> = {}
-  for (const task of (activeTasks.data || []) as any[]) {
+  // รวม 2 list, dedup ด้วย name
+  const allByUser: Record<string, any[]> = {}
+  for (const task of [...(weekTasks.data || []), ...(noDueTasks.data || [])] as any[]) {
     if (!task.assigned_to) continue
-    if (!tasksByUser[task.assigned_to]) tasksByUser[task.assigned_to] = []
-    tasksByUser[task.assigned_to].push(task)
+    if (!allByUser[task.assigned_to]) allByUser[task.assigned_to] = []
+    if (!allByUser[task.assigned_to].find((t: any) => t.name === task.name)) {
+      allByUser[task.assigned_to].push(task)
+    }
   }
 
   return activeMembers.value
     .map((user: any) => {
-      // เฉพาะ task ของ week นี้
-      const tasks = (tasksByUser[user.name] || []).filter(isInThisWeek)
-      const currentPoints = tasks.reduce((sum: number, t: any) => sum + (t.points || 0), 0)
+      const tasks = allByUser[user.name] || []
+      const doneTasks = tasks.filter((t: any) => ['Done', 'Canceled'].includes(t.status))
+      const remainingTasks = tasks.filter((t: any) => !['Done', 'Canceled'].includes(t.status))
+      const assignedPoints = tasks.reduce((s: number, t: any) => s + (t.points || 0), 0)
+      const completedPoints = doneTasks.reduce((s: number, t: any) => s + (t.points || 0), 0)
       const maxPoints = capacityMap[user.name]?.maxPoints ?? 40
       const profileName = capacityMap[user.name]?.profileName ?? null
-      const utilization = maxPoints > 0 ? Math.round((currentPoints / maxPoints) * 100) : 0
+      const utilization = maxPoints > 0 ? Math.round((assignedPoints / maxPoints) * 100) : 0
+      const completionRate = assignedPoints > 0 ? Math.round((completedPoints / assignedPoints) * 100) : 0
+      const isOnTrack = assignedPoints > 0 && completionRate >= expectedProgress
       return {
         user: user.name,
         fullName: user.full_name,
         userImage: user.user_image,
-        currentPoints,
+        assignedPoints,
+        completedPoints,
         maxPoints,
         profileName,
         utilization,
+        completionRate,
+        isOnTrack,
         tasks,
-        isOverloaded: currentPoints > maxPoints,
+        doneTasks,
+        remainingTasks,
+        isOverloaded: assignedPoints > maxPoints,
       }
     })
     .sort((a, b) => b.utilization - a.utilization)

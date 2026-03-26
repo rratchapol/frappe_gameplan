@@ -90,6 +90,25 @@ class GPTask(HasMentions, HasActivity, Document):
 						self.notify_assignment()
 				elif field == "status" and self.status == "Blocked":
 					self.notify_blocked()
+				elif field == "status":
+					self.notify_status_changed(prev_doc.status, self.status)
+
+	def notify_status_changed(self, old_status, new_status):
+		user_to_notify = self.assigned_to or self.owner
+		if not user_to_notify or user_to_notify == frappe.session.user:
+			return
+		from frappe.utils import get_fullname
+		actor = get_fullname(frappe.session.user)
+		team = frappe.db.get_value("GP Project", self.project, "team") if self.project else None
+		notif = frappe.get_doc(doctype="GP Notification")
+		notif.from_user = frappe.session.user
+		notif.to_user = user_to_notify
+		notif.type = "Task Status Changed"
+		notif.task = self.name
+		notif.project = self.project
+		notif.team = team
+		notif.message = f'{actor} changed status of "{self.title}" from {old_status} to {new_status}'
+		notif.insert(ignore_permissions=True)
 
 	def notify_assignment(self):
 		if not self.assigned_to:

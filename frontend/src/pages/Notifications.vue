@@ -38,6 +38,15 @@
           <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Reassignment'">
             <LucideArrowLeftRight class="h-4 w-4 text-ink-gray-7" />
           </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Role Changed'">
+            <LucideUserCog class="h-4 w-4 text-ink-gray-7" />
+          </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Project Added'">
+            <LucideFolderPlus class="h-4 w-4 text-ink-gray-7" />
+          </div>
+          <div class="grid h-5 w-5 place-items-center rounded-full" v-else-if="d.type === 'Task Status Changed'">
+            <LucideRefreshCw class="h-4 w-4 text-ink-gray-7" />
+          </div>
           <div class="text-base text-ink-gray-8">
             {{ d.message }} {{ dayjsLocal(d.creation).fromNow() }}
           </div>

@@ -166,6 +166,21 @@ class GPProject(ManageMembersMixin, Archivable, Document):
 		if user not in [d.user for d in self.members]:
 			self.append("members", {"user": user})
 			self.save()
+			self._notify_member_added(user)
+
+	def _notify_member_added(self, user):
+		if user == frappe.session.user:
+			return
+		from frappe.utils import get_fullname
+		actor = get_fullname(frappe.session.user)
+		notif = frappe.get_doc(doctype="GP Notification")
+		notif.from_user = frappe.session.user
+		notif.to_user = user
+		notif.type = "Project Added"
+		notif.project = self.name
+		notif.team = self.team
+		notif.message = f'{actor} added you to space "{self.title}"'
+		notif.insert(ignore_permissions=True)
 
 	@frappe.whitelist()
 	def join(self):

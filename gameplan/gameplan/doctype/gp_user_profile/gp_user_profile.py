@@ -21,6 +21,20 @@ class GPUserProfile(Document):
 	def on_update(self):
 		if self.has_value_changed("gp_role"):
 			self._sync_frappe_role_from_gp_role()
+			self._notify_role_changed()
+
+	def _notify_role_changed(self):
+		if not self.gp_role or self.user == frappe.session.user:
+			return
+		role_title = frappe.db.get_value("GP Role", self.gp_role, "title") or self.gp_role
+		from frappe.utils import get_fullname
+		actor = get_fullname(frappe.session.user)
+		notif = frappe.get_doc(doctype="GP Notification")
+		notif.from_user = frappe.session.user
+		notif.to_user = self.user
+		notif.type = "Role Changed"
+		notif.message = f'{actor} changed your role to "{role_title}"'
+		notif.insert(ignore_permissions=True)
 
 	def _sync_frappe_role_from_gp_role(self):
 		frappe_role = (

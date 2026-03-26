@@ -37,7 +37,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Type",
-   "options": "Mention\nReaction\nRich Quote\nAssignment\nReassignment\nDue Soon\nOverdue\nBlocked\nSLA Breach",
+   "options": "Mention\nReaction\nRich Quote\nAssignment\nReassignment\nDue Soon\nOverdue\nBlocked\nSLA Breach\nRole Changed\nProject Added\nTask Status Changed",
    "reqd": 1
   },
   {

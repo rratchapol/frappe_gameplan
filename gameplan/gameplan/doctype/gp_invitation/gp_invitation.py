@@ -24,21 +24,22 @@ class GPInvitation(Document):
 
 	def invite_via_email(self):
 		invite_link = frappe.utils.get_url(f"/api/method/gameplan.api.accept_invitation?key={self.key}")
-		if frappe.local.dev_server:
-			print(f"Invite link for {self.email}: {invite_link}")
-			return
+		print(f"Invite link for {self.email}: {invite_link}")
 
 		title = "Gameplan"
 		template = "gameplan_invitation"
 
-		frappe.sendmail(
-			recipients=self.email,
-			subject=f"You have been invited to join {title}",
-			template=template,
-			args={"title": title, "invite_link": invite_link},
-			now=True,
-		)
-		self.db_set("email_sent_at", frappe.utils.now())
+		try:
+			frappe.sendmail(
+				recipients=self.email,
+				subject=f"You have been invited to join {title}",
+				template=template,
+				args={"title": title, "invite_link": invite_link},
+				now=True,
+			)
+			self.db_set("email_sent_at", frappe.utils.now())
+		except Exception as e:
+			frappe.log_error(f"Failed to send invitation email to {self.email}: {e}", "GP Invitation")
 
 	@frappe.whitelist()
 	def accept_invitation(self):

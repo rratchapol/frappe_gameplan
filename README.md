@@ -15,7 +15,7 @@ Async-first discussions and project management tool for remote teams, built on F
 | **Notifications** | แจ้งเตือน assigned, mentioned, due soon, overdue, blocked, SLA breach, role changed, project added, task status changed |
 | **Sprints** | วางแผนงานเป็น sprint ภายใน space |
 | **Roles** | กำหนด GP Role (Admin / Member / Guest) ต่อ user พร้อม Frappe permission |
-| **Workload** | ดู capacity และ workload snapshot ของแต่ละ user |
+| **Workload** | ดู capacity ของแต่ละ user เทียบกับ task ที่ due ใน week นี้ บันทึก snapshot รายสัปดาห์ |
 | **SLA** | กำหนด SLA rule ต่อ space และแจ้งเตือนเมื่อ breach |
 | **Full-text Search** | ค้นหา discussions, tasks, pages ด้วย SQLite FTS5 |
 | **Real-time** | Live updates ผ่าน Socket.IO |
@@ -264,7 +264,7 @@ gameplan/
 |---|---|---|
 | `due_date_notifier` | ทุกวัน | ส่ง notification Due Soon / Overdue |
 | `sla` | ทุกชั่วโมง | ตรวจสอบ SLA breach |
-| `workload` | ทุกวัน | บันทึก workload snapshot |
+| `workload` | ทุกสัปดาห์ (จันทร์) | บันทึก workload snapshot รายสัปดาห์ (1 record ต่อ user ต่อ week) |
 
 ---
 

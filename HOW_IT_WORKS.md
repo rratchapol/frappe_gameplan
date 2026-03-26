@@ -18,7 +18,7 @@
 - **Full-text Search** — ค้นหา Discussion / Task / Page / Comment ด้วย SQLite FTS5
 - **Roles** — GP Role ผูกกับ Frappe Role (Admin / Member / Guest) ต่อ user
 - **Invitations** — เชิญ user ใหม่ผ่าน email พร้อมกำหนด GP Role
-- **Workload** — วัด capacity และบันทึก workload snapshot รายวัน
+- **Workload** — แสดง task ที่ due ใน week นี้ เทียบกับ max_points_per_week ของแต่ละ user บันทึก snapshot รายสัปดาห์
 - **SLA** — กำหนดระยะเวลาตอบสนองต่อ task พร้อม escalation
 
 ---
@@ -116,8 +116,10 @@ scheduler_events = {
     ],
     "daily": [
         "...demo.generate_data_daily",
-        "...engines.workload.WorkloadEngine.capture_team_snapshots",  # บันทึก workload
         "...engines.due_date_notifier.check_due_dates", # แจ้งเตือนงานใกล้ครบกำหนด
+    ],
+    "weekly": [
+        "...engines.workload.WorkloadEngine.capture_team_snapshots",  # บันทึก workload snapshot รายสัปดาห์
     ],
 }
 ```
@@ -376,11 +378,25 @@ check_unblocked_tasks(completed_task_name)
 ### WorkloadEngine (`engines/workload.py`)
 
 ```
-capture_team_snapshots()  (รัน daily)
+capture_team_snapshots()  (รัน weekly ทุกวันจันทร์)
     └── ต่อ user ทุกคน:
-        ├── Sum points ของ active tasks
-        ├── นับงานที่ overdue
-        └── insert GP Workload Snapshot { user, date, total_points, overdue_tasks }
+        ├── Skip ถ้ามี snapshot ของ Monday สัปดาห์นี้อยู่แล้ว (ไม่ duplicate)
+        ├── กรองเฉพาะ task ที่ due ≤ อาทิตย์ของ week นี้
+        │   หรือ In Progress ที่ไม่มี due_date
+        ├── Sum points ของ task เหล่านั้น
+        ├── นับ overdue (due_date < Monday ของ week นี้)
+        └── insert GP Workload Snapshot { user, snapshot_date=Monday, total_points, overdue_tasks }
+```
+
+**WorkloadView.vue** ใช้ logic เดียวกันสำหรับแสดง live realtime:
+```
+isInThisWeek(task):
+    ├── มี due_date ≤ อาทิตย์ของ week นี้  → นับ
+    └── ไม่มี due_date + status == "In Progress" → นับ
+
+header แสดง week range: "จ. 23 มี.ค. – อ. 29 มี.ค. · tasks due this week"
+utilization = currentPoints / maxPoints * 100%
+    └── maxPoints มาจาก GP Capacity Profile (แก้ได้ใน UI)
 ```
 
 ### SLA Engine (`engines/sla.py`)
@@ -704,8 +720,11 @@ Hourly (background)
                        → ตรวจ GP Invitation ที่หมดอายุ → ลบออก
 
 Daily (background)
-    → WorkloadEngine  → บันทึก GP Workload Snapshot รายวัน
     → DueDateNotifier → แจ้งเตือน task ที่ใกล้ครบกำหนด (Due Soon) หรือเกินแล้ว (Overdue)
+
+Weekly / Monday (background)
+    → WorkloadEngine  → บันทึก GP Workload Snapshot รายสัปดาห์ (key = Monday)
+                        กรองเฉพาะ task ที่ due ≤ อาทิตย์ หรือ In Progress ไม่มี due_date
 
 Admin เปลี่ยน GP Role ของ user
     ↓ GPUserProfile.on_update()

@@ -9,7 +9,7 @@
           </div>
           <div>
             <h1 class="text-2xl font-bold tracking-tight text-ink-gray-9">Workload View</h1>
-            <p class="text-xs text-ink-gray-5">Team capacity and current workload</p>
+            <p class="text-xs text-ink-gray-5">{{ weekLabel }} · tasks due this week</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -166,6 +166,37 @@ import { computed, ref } from 'vue'
 import { useList, Badge } from 'frappe-ui'
 import { users } from '@/data/users'
 
+// --- Current week boundaries (Monday–Sunday) ---
+function getWeekBounds() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  const day = d.getDay() // 0=Sun, 1=Mon...
+  const diffToMonday = day === 0 ? -6 : 1 - day
+  const monday = new Date(d)
+  monday.setDate(d.getDate() + diffToMonday)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  sunday.setHours(23, 59, 59, 999)
+  return { monday, sunday }
+}
+
+const { monday: weekStart, sunday: weekEnd } = getWeekBounds()
+
+const weekLabel = computed(() => {
+  const fmt = (d: Date) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+  return `${fmt(weekStart)} – ${fmt(weekEnd)}`
+})
+
+// task นับเข้า workload สัปดาห์นี้ถ้า:
+// - มี due_date ≤ วันอาทิตย์ของ week นี้ (ครอบคลุม overdue ที่ยังค้างอยู่)
+// - ไม่มี due_date แต่สถานะ In Progress (กำลังทำอยู่จริง)
+function isInThisWeek(task: any): boolean {
+  if (!task.due_date) return task.status === 'In Progress'
+  const due = new Date(task.due_date)
+  due.setHours(0, 0, 0, 0)
+  return due <= weekEnd
+}
+
 // Capacity profiles: max points per user per week
 const capacityProfiles = useList({
   doctype: 'GP Capacity Profile',
@@ -204,7 +235,8 @@ const workloadData = computed(() => {
 
   return activeMembers.value
     .map((user: any) => {
-      const tasks = tasksByUser[user.name] || []
+      // เฉพาะ task ของ week นี้
+      const tasks = (tasksByUser[user.name] || []).filter(isInThisWeek)
       const currentPoints = tasks.reduce((sum: number, t: any) => sum + (t.points || 0), 0)
       const maxPoints = capacityMap[user.name]?.maxPoints ?? 40
       const profileName = capacityMap[user.name]?.profileName ?? null
